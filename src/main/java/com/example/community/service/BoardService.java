@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BoardService {
+
     // 게시판 생성 (관리자용)
     void create(BoardDto boardDto);
 

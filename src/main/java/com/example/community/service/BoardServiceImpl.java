@@ -33,6 +33,7 @@ public class BoardServiceImpl implements BoardService {
     @Override
     public Optional<BoardDto> read(@NotNull Long id) {
         log.info("READ: id = {}", id);
+
         return boardRepository.findById(id).map(BoardDto::from);
     }
 

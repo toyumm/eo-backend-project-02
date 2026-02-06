@@ -10,4 +10,5 @@ public interface BoardRepository extends JpaRepository<BoardEntity, Long> {
      * @return 존재 여부
      */
     boolean existsByTitle(String title);
+    
 }
