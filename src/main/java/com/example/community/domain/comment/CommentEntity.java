@@ -1,57 +1,52 @@
 package com.example.community.domain.comment;
-
 import com.example.community.domain.post.PostEntity;
+import com.example.community.domain.user.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.UpdateTimestamp;
 
+import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
-@Getter
-@ToString
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+
 @Entity
 @Table(name = "comments")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ToString(exclude = "postEntity")
 public class CommentEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", referencedColumnName = "id")
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "post_id", nullable = false)
     private PostEntity postEntity;
 
-    @Column(name = "content", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "r_content", nullable = false, length = 200)
     private String content;
 
-    @Column(name = "writer", length = 50, nullable = false)
-    private String writer;
-
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
 
     @Builder
-    public CommentEntity(PostEntity postEntity, String content, String writer) {
+    public CommentEntity(Long userId, PostEntity postEntity, String content) {
+        this.userId = userId;
         this.postEntity = postEntity;
         this.content = content;
-        this.writer = writer;
     }
 
     public CommentEntity updateContent(String content) {
         this.content = content;
-        return this;
-    }
-
-    public CommentEntity updateWriter(String writer) {
-        this.writer = writer;
         return this;
     }
 }

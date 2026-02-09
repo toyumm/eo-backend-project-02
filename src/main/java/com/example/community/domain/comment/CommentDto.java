@@ -2,6 +2,8 @@ package com.example.community.domain.comment;
 
 import com.example.community.domain.post.PostEntity;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,24 +15,25 @@ import java.time.LocalDateTime;
 @Builder
 public class CommentDto {
     private Long id;
+    private Long userId;
     private Long postId;
 
-    @NotBlank(message = "Content is required.")
+    @NotBlank(message = "내용을 입력해주세요.")
+    @Size(min = 1, max = 200, message = "내용은 1자 이상 200자 이하로 작성해 주셔야 합니다.")
     private String content;
 
-    @NotBlank(message = "Writer is required.")
     private String writer;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     // 정적 팩토리 메서드(static factory method)
-    public static CommentDto from(CommentEntity commentEntity) {
+    public static CommentDto from(@NotNull CommentEntity commentEntity) {
         return CommentDto.builder()
                 .id(commentEntity.getId())
+                .userId(commentEntity.getUserId())
                 .postId(commentEntity.getPostEntity().getId())
                 .content(commentEntity.getContent())
-                .writer(commentEntity.getWriter())
                 .createdAt(commentEntity.getCreatedAt())
                 .updatedAt(commentEntity.getUpdatedAt())
                 .build();
@@ -39,14 +42,13 @@ public class CommentDto {
     /**
      * CommentDto 인스턴스를 CommentEntity 인스턴스로 변환
      *
-     * @param postEntity CommentEntity 인스턴스가 참조하는 PostEntity 인스턴스
+     * @param postsEntity CommentEntity 인스턴스가 참조하는 PostEntity 인스턴스
      * @return CommentEntity 인스턴스
      */
-    public CommentEntity toEntity(PostEntity postEntity) {
+    public CommentEntity toEntity(PostEntity postsEntity) {
         return CommentEntity.builder()
-                .postEntity(postEntity)
+                .postEntity(postsEntity)
                 .content(content)
-                .writer(writer)
                 .build();
     }
 }
