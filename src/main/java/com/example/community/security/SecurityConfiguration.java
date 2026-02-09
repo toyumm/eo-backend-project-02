@@ -29,7 +29,11 @@ public class SecurityConfiguration {
     public WebSecurityCustomizer webSecurityCustomizer() {
         return webSecurity -> webSecurity.ignoring()
                 .requestMatchers("/h2-console/**")
-                .requestMatchers("/static/**");
+                .requestMatchers("/static/**")
+                .requestMatchers("/css/**")
+                .requestMatchers("/images/**")
+                .requestMatchers("/js/**");
+                //.requestMatchers("/check-username", "/check-nickname");
     }
 
     /**
@@ -47,12 +51,17 @@ public class SecurityConfiguration {
         httpSecurity
                 .authorizeHttpRequests(authorize -> authorize
                         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
-                        .requestMatchers("/", "/login", "/signup").permitAll()
+                        .requestMatchers("/", "/login", "/signup", "/check-username", "/check-nickname").permitAll()
+                        .requestMatchers("/send-verification-email", "/verify-email-code").permitAll()
                         .requestMatchers("/board/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/error/**").permitAll()
                         .anyRequest().authenticated()
                 );
+
+        // CSRF 비활성화 (테스트용)
+        httpSecurity
+                .csrf(csrf -> csrf.disable());
 
         // AccessDeniedException 예외를 처리할 핸들러 등록
         httpSecurity
