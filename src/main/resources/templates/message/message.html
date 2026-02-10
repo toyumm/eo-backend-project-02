@@ -1,12 +1,88 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>쪽지함 - 커뮤니티</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root { --main-purple: #f3efff; --dark-purple: #6f42c1; }
+        body { background-color: #f8f9fa; }
+        .sidebar { background-color: var(--main-purple); min-height: 100vh; padding: 20px; border-right: 1px solid #ddd; }
+        .nav-link { color: #333; margin-bottom: 10px; border-radius: 8px; }
+        .nav-link.active { background-color: #fff; color: var(--dark-purple); font-weight: bold; }
+        .badge-count { background-color: var(--dark-purple); color: white; float: right; }
+        .content-area { background-color: white; padding: 30px; border-radius: 15px; margin: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .msg-row { border-bottom: 1px solid #eee; padding: 12px 0; cursor: pointer; }
+        .msg-row:hover { background-color: #fcfaff; }
+        .pagination .page-link { color: var(--dark-purple); }
+        .pagination .active .page-link { background-color: var(--dark-purple); border-color: var(--dark-purple); }
+    </style>
 </head>
 <body>
 
+<div class="container-fluid">
+    <div class="row">
+        <nav class="col-md-2 d-none d-md-block sidebar">
+            <h5 class="mb-4 fw-bold" th:text="${#authentication.name} + ' 의 쪽지함'">사용자 의 쪽지함</h5>
+            <div class="nav flex-column nav-pills">
+                <a class="nav-link active" th:href="@{/messages/received}">
+                    📥 전체 쪽지함 <span class="badge badge-count rounded-pill" th:text="${unreadCount}">24</span>
+                </a>
+                <a class="nav-link" th:href="@{/messages/write}">📝 쪽지 보내기</a>
+                <a class="nav-link" th:href="@{/messages/sent}">📤 보낸 쪽지함</a>
+                <hr>
+                <a class="nav-link text-danger" th:href="@{/messages/trash}">🗑️ 휴지통</a>
+            </div>
+        </nav>
 
+        <main class="col-md-10">
+            <div class="content-area">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold">전체 쪽지함</h4>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            보낸사람 · 날짜
+                        </button>
+                    </div>
+                </div>
 
+                <div class="message-list">
+                    <div th:each="msg : ${messages.content}" class="msg-row d-flex align-items-center"
+                         th:onclick="|location.href='@{/messages/{id}(id=${msg.id})}'|">
+                        <div class="col-1 text-center"><input type="checkbox" onclick="event.stopPropagation();"></div>
+                        <div class="col-2 fw-bold" th:text="${msg.senderNickname}">발신자닉네임</div>
+                        <div class="col-6 text-truncate" th:text="${msg.title}">쪽지 제목이 여기에 표시됩니다.</div>
+                        <div class="col-3 text-end text-muted small"
+                             th:text="${#temporals.format(msg.createdAt, 'yyyy-MM-dd HH:mm')}">2026-02-09</div>
+                    </div>
+
+                    <div th:if="${messages.empty}" class="text-center py-5 text-muted">
+                        받은 쪽지가 없습니다.
+                    </div>
+                </div>
+
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item" th:classappend="${!messages.hasPrevious} ? 'disabled'">
+                            <a class="page-link" th:href="@{/messages/received(page=${messages.number})}">&laquo; Previous</a>
+                        </li>
+
+                        <li th:each="pageIdx : ${#numbers.sequence(1, messages.totalPages)}"
+                            th:if="${messages.totalPages > 0}"
+                            class="page-item" th:classappend="${pageIdx == messages.number + 1} ? 'active'">
+                            <a class="page-link" th:href="@{/messages/received(page=${pageIdx})}" th:text="${pageIdx}">1</a>
+                        </li>
+
+                        <li class="page-item" th:classappend="${!messages.hasNext} ? 'disabled'">
+                            <a class="page-link" th:href="@{/messages/received(page=${messages.number + 2})}">Next &raquo;</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
