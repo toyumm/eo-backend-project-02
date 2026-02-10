@@ -27,8 +27,8 @@ class PostServiceTest {
     @Autowired
     private PostRepository postRepository;
 
-//    @Autowired
-//    private UserRepository userRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     private PostEntity anyPost() {
         return postRepository.findAll(PageRequest.of(0, 1, Sort.by(Sort.Direction.ASC, "id")))

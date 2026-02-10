@@ -4,6 +4,7 @@ import com.example.community.domain.post.Criteria;
 import com.example.community.domain.post.Pagination;
 import com.example.community.domain.post.PostDto;
 import com.example.community.domain.post.ResultDto;
+import com.example.community.security.CustomUserDetails;
 import com.example.community.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -49,11 +51,12 @@ public class PostController {
     }
 
     @PostMapping("/write")
-    public String write(@PathVariable Long boardId, PostDto postDto, RedirectAttributes redirectAttributes) {
+    public String write(@PathVariable Long boardId, PostDto postDto,
+                        RedirectAttributes redirectAttributes,
+                        @AuthenticationPrincipal CustomUserDetails userDetails) {
         log.info("write boardId={}, postDto={}", boardId, postDto);
 
-        Long userId = 1L; // TODO: 로그인 연동 후 제거
-
+        Long userId = userDetails.getId();
         Long createdId = postService.create(boardId, postDto, userId);
 
         redirectAttributes.addAttribute("boardId", boardId);
@@ -85,10 +88,12 @@ public class PostController {
     }
 
     @PostMapping("/update")
-    public String update(@PathVariable Long boardId, PostDto postDto, Criteria criteria, RedirectAttributes redirectAttributes) {
+    public String update(@PathVariable Long boardId, PostDto postDto, Criteria criteria,
+                         RedirectAttributes redirectAttributes,
+                         @AuthenticationPrincipal CustomUserDetails userDetails) {
         log.info("update boardId={}, postDto={}", boardId, postDto);
 
-        Long userId = 1L; // TODO: 로그인 연동 후 제거
+        Long userId = userDetails.getId();
 
         if (postService.update(postDto, userId)) {
             redirectAttributes.addFlashAttribute("result", ResultDto.of(true, "update"));
@@ -116,10 +121,12 @@ public class PostController {
     }
 
     @GetMapping("/delete")
-    public String delete(@PathVariable Long boardId, @RequestParam Long id, Criteria criteria, RedirectAttributes redirectAttributes) {
+    public String delete(@PathVariable Long boardId, @RequestParam Long id, Criteria criteria,
+                         RedirectAttributes redirectAttributes,
+                         @AuthenticationPrincipal CustomUserDetails userDetails) {
         log.info("delete boardId={}, id={}", boardId, id);
 
-        Long userId = 1L; // TODO: 로그인 연동 후 제거
+        Long userId = userDetails.getId();
 
         if (postService.delete(id, userId)) {
             redirectAttributes.addFlashAttribute("result", ResultDto.of(true, "delete"));
