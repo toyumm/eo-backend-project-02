@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
  * users 테이블과 매핑
  */
 @Getter
+@Setter
 @ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
