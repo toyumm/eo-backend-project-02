@@ -2,7 +2,8 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Board List</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시판 게시물</title>
     <style>
         #list > caption { caption-side: top; text-align: right; margin-bottom: 6px; }
 
@@ -29,7 +30,7 @@
 
 <h1>Board List</h1>
 
-<table border="1" id="list">
+<table>
     <caption th:object="${pagination}">
         <span th:text="*{pageNumber}"></span> / <span th:text="*{lastPage}"></span>
     </caption>
@@ -38,15 +39,31 @@
         <th>ID</th>
         <th>Title</th>
         <th>Writer</th>
+        <th>Views</th>
+        <th>Comments</th>
+        <th>Likes</th>
         <th>Date</th>
         <th>Last Updated</th>
     </tr>
     </thead>
     <tbody>
-    <tr th:each="postDto : ${postDtoList}" th:object="${postDto}">
+    <tr th:each="postDto : ${postPage.content}" th:object="${postDto}">
         <td th:text="*{id}"></td>
-        <td><a th:href="@{read(id=*{id}, page=${pagination.pageNumber})}" th:text="*{title}"></a></td>
+
+        <td>
+            <a th:href="@{/board/{boardId}/post/read(
+                    boardId=${boardId},
+                    id=${postDto.id},
+                    page=${criteria.page},
+                    size=${criteria.size}
+                  )}"
+               th:text="*{title}"></a>
+        </td>
+
         <td th:text="*{writer}"></td>
+        <td th:text="*{viewCount}"></td>
+        <td th:text="*{commentsCount}"></td>
+        <td th:text="*{likesCount}"></td>
         <td th:text="*{#temporals.format(createdAt, 'yyyy-MM-dd HH:mm')}"></td>
         <td th:text="*{#temporals.format(updatedAt, 'yyyy-MM-dd HH:mm')}"></td>
     </tr>
@@ -54,18 +71,35 @@
 </table>
 
 <ol id="pagination" th:object="${pagination}">
-    <li th:if="*{startPage} != 1"><a th:href="@{list(page=1)}">First</a></li>
-    <li th:if="*{prev}"><a th:href="@{list(page=*{startPage} - 1)}">Prev</a></li>
-    <th:block th:each="page : *{#numbers.sequence(startPage, endPage)}">
-        <li th:if="${page} == *{pageNumber}"><span th:text="${page}"></span></li>
-        <li th:unless="${page} == *{pageNumber}"><a th:href="@{list(page=${page})}" th:text="${page}"></a></li>
+    <li th:if="*{startPage} != 1">
+        <a th:href="@{/board/{boardId}/post/list(boardId=${boardId}, page=1, size=${criteria.size})}">First</a>
+    </li>
+
+    <li th:if="*{prev}">
+        <a th:href="@{/board/{boardId}/post/list(boardId=${boardId}, page=*{startPage} - 1, size=${criteria.size})}">Prev</a>
+    </li>
+
+    <th:block th:each="p : *{#numbers.sequence(startPage, endPage)}">
+        <li th:if="${p} == *{pageNumber}">
+            <span th:text="${p}"></span>
+        </li>
+        <li th:unless="${p} == *{pageNumber}">
+            <a th:href="@{/board/{boardId}/post/list(boardId=${boardId}, page=${p}, size=${criteria.size})}"
+               th:text="${p}"></a>
+        </li>
     </th:block>
-    <li th:if="*{next}"><a th:href="@{list(page=*{endPage} + 1)}">Next</a></li>
-    <li th:if="*{endPage} != *{lastPage}"><a th:href="@{list(page=*{lastPage})}">Last</a></li>
+
+    <li th:if="*{next}">
+        <a th:href="@{/board/{boardId}/post/list(boardId=${boardId}, page=*{endPage} + 1, size=${criteria.size})}">Next</a>
+    </li>
+
+    <li th:if="*{endPage} != *{lastPage}">
+        <a th:href="@{/board/{boardId}/post/list(boardId=${boardId}, page=*{lastPage}, size=${criteria.size})}">Last</a>
+    </li>
 </ol>
 
 <p>
-    [<a th:href="@{write}">Write</a>]
+    [<a th:href="@{/board/{boardId}/post/write(boardId=${boardId})}">Write</a>]
 </p>
 
 </body>

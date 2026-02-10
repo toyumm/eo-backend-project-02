@@ -114,7 +114,7 @@ class PostControllerTest {
 //     게시글 목록 페이지 접근 테스트
 
     @Test
-    void testList() throws Exception {
+    public void testList() throws Exception {
         MockHttpServletRequestBuilder request =
                 MockMvcRequestBuilders.get("/board/{boardId}/post", BOARD_ID)
                         .with(testUser());
@@ -126,7 +126,7 @@ class PostControllerTest {
 
 //    게시글 목록, 페이징 파라미터 테스트
     @Test
-    void testListWithPaging() throws Exception {
+    public void testListWithPaging() throws Exception {
         MockHttpServletRequestBuilder request =
                 MockMvcRequestBuilders.get("/board/{boardId}/post/list", BOARD_ID)
                         .with(testUser())
@@ -140,7 +140,7 @@ class PostControllerTest {
 
 //    게시글 작성 테스트
     @Test
-    void testWrite() throws Exception {
+    public void testWrite() throws Exception {
         MockHttpServletRequestBuilder request =
                 MockMvcRequestBuilders.post("/board/{boardId}/post/write", BOARD_ID)
                         .with(testUser())
@@ -155,7 +155,7 @@ class PostControllerTest {
 
 //    게시글 상세 조회 테스트
     @Test
-    void testRead() throws Exception {
+    public void testRead() throws Exception {
         String createdId = createPostAndGetId("[TEST] PostControllerTest#testRead", "[TEST] content");
 
         mockMvc.perform(
@@ -169,7 +169,7 @@ class PostControllerTest {
 
 //    게시글 상세 조회, 페이징 파라미터 유지 테스트
     @Test
-    void testReadWithPaging() throws Exception {
+    public void testReadWithPaging() throws Exception {
         String createdId = createPostAndGetId("[TEST] PostControllerTest#testReadWithPaging", "[TEST] content");
 
         mockMvc.perform(
@@ -185,7 +185,7 @@ class PostControllerTest {
 
 //    게시글 수정 폼 진입 테스트
     @Test
-    void testUpdateForm() throws Exception {
+    public void testUpdateForm() throws Exception {
         String createdId = createPostAndGetId("[TEST] update form", "[TEST] content");
 
         mockMvc.perform(
@@ -201,7 +201,7 @@ class PostControllerTest {
 
 //    게시글 수정 테스트
     @Test
-    void testUpdate() throws Exception {
+    public void testUpdate() throws Exception {
         String createdId = createPostAndGetId("[TEST] before update", "[TEST] before content");
 
         mockMvc.perform(
@@ -230,7 +230,7 @@ class PostControllerTest {
 
 //    게시글 삭제 처리 테스트
     @Test
-    void testDelete() throws Exception {
+    public void testDelete() throws Exception {
         String createdId = createPostAndGetId("[TEST] delete", "[TEST] content");
 
         mockMvc.perform(
