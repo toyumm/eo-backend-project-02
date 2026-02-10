@@ -1,4 +1,7 @@
 spring:
+  sql:
+    init:
+      mode: always
   application:
     name: community
 
@@ -14,6 +17,7 @@ spring:
       path: /h2-console
 
   jpa:
+    defer-datasource-initialization: true
     database: h2
     open-in-view: false
     hibernate:

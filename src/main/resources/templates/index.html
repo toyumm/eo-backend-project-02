@@ -30,11 +30,22 @@
         <aside id="left-sidebar">
             <!-- 공지사항 -->
             <div class="sidebar-section">
-                <h3>공지사항</h3>
+                <h3>
+                    <a th:if="${noticeBoardId != null}"
+                        th:href="@{/board/{boardId}/post/list(boardId=${noticeBoardId})}">
+                        공지사항
+                    </a>
+                    <span th:unless="${noticeBoardId != null}">공지사항</span>
+                </h3>
                 <ul class="sidebar-menu">
-                    <li><a href="#">공지사항 1</a></li>
-                    <li><a href="#">공지사항 2</a></li>
-                    <li><a href="#">공지사항 3</a></li>
+                    <li th:each="notice : ${noticeList}">
+                        <a th:href="@{/board/{boardId}/post/read(boardId=${noticeBoardId}, id=${notice.id})}"
+                           th:text="${notice.title}">공지 제목</a>
+                    </li>
+
+                    <li th:if="${noticeList == null || #lists.isEmpty(noticeList)}">
+                        <span>등록된 공지사항이 없습니다.</span>
+                    </li>
                 </ul>
             </div>
 
@@ -42,11 +53,20 @@
             <div class="sidebar-section">
                 <h3>📋 게시판</h3>
                 <ul class="sidebar-menu">
-                    <li th:each="board : ${boardList}">
-                        <a th:href="@{/board/{boardId}/post/list(boardId=${board.id})}"
-                           th:text="${board.title}">게시판</a>
-                    </li>
+                    <th:block th:each="board : ${boardList}">
+                        <li th:if="${board.title != '공지사항'}">
+                            <a th:href="@{/board/{boardId}/post/list(boardId=${board.id})}"
+                               th:text="${board.title}">게시판</a>
+                        </li>
+                    </th:block>
                 </ul>
+
+                <!-- 관리자만 게시판 추가 -->
+                <div class="board-admin" sec:authorize="hasRole('ADMIN')">
+                    <a th:href="@{/admin/board/create}" id="add-board-btn">
+                        게시판 추가
+                    </a>
+                </div>
             </div>
         </aside>
 
@@ -57,6 +77,8 @@
             <section id="notice-section">
                 <h4>공지사항</h4>
                 <div class="notice-item">
+
+<!--                    TODO 임시 하드코딩-->
                     <a href="#">[공지] 커뮤니티 이용 규칙 안내</a>
                 </div>
                 <div class="notice-item">

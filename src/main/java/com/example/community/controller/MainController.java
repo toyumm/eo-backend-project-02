@@ -2,14 +2,18 @@ package com.example.community.controller;
 
 import com.example.community.domain.board.BoardDto;
 import com.example.community.service.BoardService;
+import com.example.community.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.Optional;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,63 +27,41 @@ import java.util.Map;
 @Slf4j
 public class MainController {
 
+    private final PostService postService;
     private final BoardService boardService;
 
     /**
-     * 메인 페이지 (인덱스)
-     * "http://localhost:8080"로 접속해서 확인
+     *메인 페이지 조회
      *
-     * @param page 페이지 번호 (기본값: 1)
-     * @param size 페이지 크기 (기본값: 10)
-     * @param searchType 검색 타입 (title, content, writer, titleContent)
-     * @param keyword 검색 키워드
-     * @param model 뷰에 전달할 데이터
-     * @return 메인 페이지 템플릿
+     * 게시글 목록을 조회하여 사이드바에 표시
+     * 공지사항 게시판의 최신 게시글을 조회하여 공지 영역에 표시
+     *
+     * @param model 메인 화면에 필요한 데이터 전달
+     * @return index 템플릿
      */
     @GetMapping("/")
-    public String index(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String searchType,
-            @RequestParam(required = false) String keyword,
-            Model model) {
+    public String index(Model model) {
+        List<BoardDto> boardList = boardService.getList();
+        model.addAttribute("boardList", boardList);
 
-        log.info("=== 메인 페이지 접속 ===");
-        log.info("page = {}, size = {}, searchType = {}, keyword = {}",
-                page, size, searchType, keyword);
+        boardList.stream()
+                .filter(b -> "공지사항".equals(b.getTitle()))
+                .findFirst()
+                .ifPresentOrElse(board -> {
+                    var pageable = PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "id"));
+                    var noticePage = postService.getList(board.getId(), pageable);
+                    model.addAttribute("noticeList", noticePage.getContent());
+                    model.addAttribute("noticeBoardId", board.getId());
+                }, () -> {
+                    model.addAttribute("noticeList", List.of());
+                    model.addAttribute("noticeBoardId", null);
+                });
 
-        try {
-            // 게시판 목록 조회
-            List<BoardDto> boardList = new ArrayList<>();
-            try {
-                boardList = boardService.getList();
-                log.info("게시판 목록 조회 완료: {} 개", boardList.size());
-            } catch (Exception e) {
-                log.warn("게시판 목록 조회 실패", e);
-                boardList = new ArrayList<>();
-            }
-
-            // 임시 게시글 데이터 생성 (나중에 실제 데이터로 교체)
-            List<Map<String, Object>> tempPosts = createTempPosts();
-
-            // 빈 페이지 객체 생성 (게시글이 없어도 에러 방지)
-            Page<?> postPage = Page.empty();
-
-            // 모델에 데이터 추가
-            model.addAttribute("boardList", boardList);
-            model.addAttribute("postPage", postPage);
-            model.addAttribute("tempPosts", tempPosts);  // 임시 게시글 추가
-            model.addAttribute("searchType", searchType != null ? searchType : "");
-            model.addAttribute("keyword", keyword != null ? keyword : "");
-
-            log.info("=== 메인 페이지 로드 성공 ===");
-
-            return "index";
-
-        } catch (Exception e) {
-            log.error("=== 메인 페이지 로드 중 에러 발생 ===", e);
-            throw e;
-        }
+        model.addAttribute("postPage", Page.empty());
+        model.addAttribute("tempPosts", null);
+        model.addAttribute("searchType", "");
+        model.addAttribute("keyword", "");
+        return "index";
     }
 
     /**
@@ -176,4 +158,5 @@ public class MainController {
         log.info("에러 페이지 접속");
         return "error";
     }
+
 }
