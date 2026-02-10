@@ -58,7 +58,7 @@ public class MainController {
                 });
 
         model.addAttribute("postPage", Page.empty());
-        model.addAttribute("tempPosts", null);
+        model.addAttribute("tempPosts", createTempPosts());
         model.addAttribute("searchType", "");
         model.addAttribute("keyword", "");
         return "index";

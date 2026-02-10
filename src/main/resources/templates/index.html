@@ -32,7 +32,7 @@
             <div class="sidebar-section">
                 <h3>
                     <a th:if="${noticeBoardId != null}"
-                        th:href="@{/board/{boardId}/post/list(boardId=${noticeBoardId})}">
+                       th:href="@{/board/{boardId}/post/list(boardId=${noticeBoardId})}">
                         공지사항
                     </a>
                     <span th:unless="${noticeBoardId != null}">공지사항</span>
