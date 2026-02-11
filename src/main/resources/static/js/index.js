@@ -218,3 +218,12 @@ function openBoardPopup(url) {
     );
 }
 
+// 쪽지함 팝업 열기
+function openMessagePopup() {
+    const url = '/messages/all';
+    const name = 'messengerPopup';
+    const options = 'width=1000, height=750, top=100, left=200, resizable=no, scrollbars=yes';
+
+    window.open(url, name, options);
+}
+
