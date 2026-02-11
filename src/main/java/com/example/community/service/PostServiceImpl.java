@@ -1,6 +1,5 @@
 package com.example.community.service;
 
-import com.example.community.domain.board.BoardEntity;
 import com.example.community.domain.post.PostDto;
 import com.example.community.domain.post.PostEntity;
 import com.example.community.persistence.PostRepository;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Service;
 public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
-//    private final BoardRepository boardRepository;
     private final UserRepository userRepository;
 
     private boolean isAdmin(Long userId) {
@@ -32,10 +30,6 @@ public class PostServiceImpl implements PostService {
     @Override
     public Long create(Long boardId, PostDto postDto, Long userId) {
         log.info("CREATE: boardId={}, postDto={}, userId={}", boardId, postDto, userId);
-
-        // 게시판 존재 확인
-//        boardRepository.findById(boardId)
-//                .orElseThrow(() -> new EntityNotFoundException("Board not found: " + boardId));
 
         PostEntity postEntity = PostEntity.builder()
                 .boardId(boardId)
@@ -63,7 +57,7 @@ public class PostServiceImpl implements PostService {
 
         // 게시글 조회
         PostEntity postEntity = postRepository.findById(id)
-                .orElseThrow( () -> new EntityNotFoundException("Post not found: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Post not found: " + id));
 
         // 조회수 증가
         postEntity.increaseViewCount();
@@ -80,9 +74,7 @@ public class PostServiceImpl implements PostService {
                     postEntity.getUserId(), e.getMessage());
         }
 
-
         return PostDto.from(postEntity, nickname);
-
     }
 
     @Override
@@ -91,7 +83,7 @@ public class PostServiceImpl implements PostService {
         log.info("UPDATE: postId={}, userId={}, title={}", postDto.getId(), userId, postDto.getTitle());
 
         return postRepository.findById(postDto.getId()).map(postEntity -> {
-                    //작성자 검증
+                    // 작성자 검증
                     if (!postEntity.getUserId().equals(userId)) {
                         log.info("UPDATE DENIED: postId={}, requestUserId={}, ownerUserId={}",
                                 postDto.getId(), userId, postEntity.getUserId());
@@ -130,18 +122,75 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public Page<PostDto> getList(Long boardId, Pageable pageable) {
         log.info("GET LIST: boardId={}, pageable={}", boardId, pageable);
 
         return postRepository.findByBoardId(boardId, pageable)
-                .map(postEntity -> {
-                    String nickname = userRepository.findById(postEntity.getUserId())
-                            .map(user -> user.getNickname())
-                            .orElse("unknown");
+                .map(this::convertToDto);
+    }
 
-                    return PostDto.from(postEntity, nickname);
-                });
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PostDto> getAllPosts(Pageable pageable) {
+        log.info("GET ALL POSTS: pageable={}", pageable);
 
+        return postRepository.findAll(pageable)
+                .map(this::convertToDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PostDto> searchPosts(String searchType, String keyword, Pageable pageable) {
+        log.info("SEARCH POSTS: searchType={}, keyword={}, pageable={}", searchType, keyword, pageable);
+
+        // 키워드가 비어있으면 전체 목록 반환
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return getAllPosts(pageable);
+        }
+
+        Page<PostEntity> resultPage;
+
+        switch (searchType) {
+            case "title":
+                resultPage = postRepository.searchByTitle(keyword, pageable);
+                break;
+            case "content":
+                resultPage = postRepository.searchByContent(keyword, pageable);
+                break;
+            case "writer":
+                resultPage = postRepository.searchByWriter(keyword, pageable);
+                break;
+            case "titleContent":
+                resultPage = postRepository.searchByTitleOrContent(keyword, pageable);
+                break;
+            default:
+                log.warn("SEARCH: invalid searchType={}, using titleContent", searchType);
+                resultPage = postRepository.searchByTitleOrContent(keyword, pageable);
+        }
+
+        return resultPage.map(this::convertToDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PostDto> getPopularPosts(Pageable pageable) {
+        log.info("GET POPULAR POSTS: pageable={}", pageable);
+
+        return postRepository.findTopByViewCount(pageable)
+                .map(this::convertToDto);
+    }
+
+    /**
+     * PostEntity를 PostDto로 변환 (닉네임 포함)
+     * @param postEntity 게시글 엔티티
+     * @return 게시글 DTO
+     */
+    private PostDto convertToDto(PostEntity postEntity) {
+        String nickname = userRepository.findById(postEntity.getUserId())
+                .map(user -> user.getNickname())
+                .orElse("unknown");
+
+        return PostDto.from(postEntity, nickname);
     }
 }
