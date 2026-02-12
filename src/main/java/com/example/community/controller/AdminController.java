@@ -208,7 +208,7 @@ public class AdminController {
     @PostMapping("/boards")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> createBoard(@RequestParam String title){
-        log.info("Create board - title: {]", title);
+        log.info("Create board - title: {}", title);
         Map<String, Object> response = new HashMap<>();
         try {
             BoardDto boardDto = BoardDto.builder()
@@ -222,9 +222,15 @@ public class AdminController {
             return ResponseEntity.ok(response);
 
         }catch (IllegalArgumentException e){
+            log.error("Board creation failed: ", e);
             response.put("success", false);
             response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.ok(response);
+        }catch (Exception e) {
+            log.error("Unexpected error: ", e);
+            response.put("success", false);
+            response.put("message", "게시판 생성에 실패했습니다.");
+            return ResponseEntity.ok(response);
         }
     }
 
@@ -292,20 +298,14 @@ public class AdminController {
     @ResponseBody
     public ResponseEntity<Page<PostDto>> getPosts(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) Long boardId
+            @RequestParam(defaultValue = "20") int size
             ) {
-        log.info("Get posts - page: {}, size: {}, boardId: {}", page, size, boardId);
+        log.info("Get posts - page: {}, size: {}", page, size);
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
 
-        Page<PostDto> posts;
-        if (boardId != null) {
-            posts = postService.getList(boardId, pageable);
-        }else{
-            // TODO : postService 에 전체 조회 메서드 추가 필요함
-            posts = postService.getList(boardId, pageable);
-        }
+        Page<PostDto> posts = postService.getAllPosts(pageable);
+
         return ResponseEntity.ok(posts);
     }
 
@@ -340,25 +340,19 @@ public class AdminController {
         }
     }
 
-    /**
-     * 전체 댓글 조회 (API)
-     * TODO: CommentService에 전체 조회 메서드 추가 필요
-     */
+    // 댓글 조회 API
     @GetMapping("/comments")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> getComments(
+    public ResponseEntity<Page<CommentDto>> getComments(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
         log.info("Get comments - page: {}, size: {}", page, size);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", false);
-        response.put("message", "전체 댓글 조회 기능은 아직 구현되지 않았습니다.");
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+        Page<CommentDto> comments = commentService.getAllComments(pageable);
 
-        // TODO: CommentService에 전체 조회 메서드 추가 후 구현
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(comments);
     }
 
     @DeleteMapping("/comments/{commentId}")

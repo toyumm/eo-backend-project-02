@@ -1,12 +1,139 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 대시보드 - 걸어서 맛집으로</title>
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <script src="/js/dashboard.js" defer></script>
 </head>
 <body>
+<!-- Header -->
+<header id="header">
+    <img src="/images/logo.png" alt="Logo" id="logo">
+</header>
 
+<!-- Banner -->
+<div id="banner">
+    <div id="banner-content">
+        <img src="/images/logo2.png" alt="배너 로고" id="banner-logo">
+        <h1 id="banner-title"> 관리자 대시보드</h1>
+    </div>
+</div>
 
+<!-- Container -->
+<div id="container">
+    <!-- Sidebar -->
+    <aside id="sidebar">
+        <div id="menu-card">
+            <h3 id="menu-title">관리 메뉴</h3>
+            <div id="menu-list">
+                <div id="menu-users" data-section="users">사용자 관리</div>
+                <div id="menu-posts" data-section="posts">게시물 관리</div>
+                <div id="menu-comments" data-section="comments">댓글 관리</div>
+                <div id="menu-reports" data-section="reports">사용자 신고</div>
+            </div>
+        </div>
+    </aside>
 
+    <!-- Main Content -->
+    <main id="main-content">
+        <!-- 사용자 관리 Section -->
+        <section id="users-section">
+            <div id="users-header">
+                <h2>사용자 관리</h2>
+            </div>
+            <table id="users-table">
+                <thead>
+                <tr>
+                    <th>아이디</th>
+                    <th>이름</th>
+                    <th>이메일</th>
+                    <th>권한</th>
+                    <th>상태</th>
+                    <th>가입일</th>
+                    <th>관리</th>
+                </tr>
+                </thead>
+                <tbody id="users-tbody">
+                <tr>
+                    <td colspan="7">데이터를 불러오는 중...</td>
+                </tr>
+                </tbody>
+            </table>
+            <div id="users-pagination"></div>
+        </section>
+
+        <!-- 게시물 관리 Section -->
+        <section id="posts-section">
+            <div id="posts-header">
+                <h2>게시물 관리</h2>
+            </div>
+            <table id="posts-table">
+                <thead>
+                <tr>
+                    <th>제목</th>
+                    <th>작성자</th>
+                    <th>게시판</th>
+                    <th>조회수</th>
+                    <th>작성일</th>
+                    <th>관리</th>
+                </tr>
+                </thead>
+                <tbody id="posts-tbody">
+                <tr>
+                    <td colspan="6">데이터를 불러오는 중...</td>
+                </tr>
+                </tbody>
+            </table>
+            <div id="posts-pagination"></div>
+        </section>
+
+        <!-- 댓글 관리 Section -->
+        <section id="comments-section">
+            <div id="comments-header">
+                <h2>댓글 관리</h2>
+            </div>
+            <table id="comments-table">
+                <thead>
+                <tr>
+                    <th>댓글 내용</th>
+                    <th>작성자</th>
+                    <th>게시글</th>
+                    <th>작성일</th>
+                    <th>관리</th>
+                </tr>
+                </thead>
+                <tbody id="comments-tbody">
+                <tr>
+                    <td colspan="5">데이터를 불러오는 중...</td>
+                </tr>
+                </tbody>
+            </table>
+            <div id="comments-pagination"></div>
+        </section>
+
+        <!-- 사용자 신고 Section -->
+        <section id="reports-section">
+            <div id="reports-header">
+                <h2> 사용자 신고</h2>
+            </div>
+            <div id="reports-empty">
+                <p>신고 기능은 준비중입니다.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Right Panel -->
+    <aside id="right-panel">
+        <div id="admin-card">
+            <div id="admin-profile">👑</div>
+            <div id="admin-name">관리자</div>
+            <div id="admin-role">ADMINISTRATOR</div>
+            <button id="main-page-btn" type="button">메인페이지</button>
+            <button id="logout-btn" type="button">로그아웃</button>
+        </div>
+    </aside>
+</div>
 </body>
 </html>
