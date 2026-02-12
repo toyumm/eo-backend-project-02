@@ -1,0 +1,97 @@
+:root {
+    --pointPurple: #6f42c1;
+    --subPurple: #f3efff;
+    --textGray: #888;
+    --borderLight: #eee;
+}
+
+#messengerWrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* 사이드바 */
+#sideMenu {
+    width: 240px;
+    background-color: var(--subPurple);
+    padding: 30px 20px;
+    border-right: 1px solid #ddd;
+}
+
+#sideMenu > h1 {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 30px;
+    color: var(--pointPurple);
+}
+
+#sideMenu > ul > li > .menuItem {
+    display: block;
+    padding: 12px;
+    text-decoration: none;
+    color: #444;
+    border-radius: 8px;
+    margin-bottom: 5px;
+}
+
+#sideMenu > ul > li > .menuItem.active {
+    background: #fff;
+    color: var(--pointPurple);
+    font-weight: bold;
+}
+
+#menuDivider {
+    height: 1px;
+    background: #ddd;
+    margin: 15px 0;
+    list-style: none;
+}
+
+/* 메인 영역 최적화 */
+#mainContent {
+    flex: 1;
+    padding: 40px;
+}
+
+#messageBoard {
+    background: #fff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+#messageBoard > header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+/* 리스트 영역 */
+#messageHeader, .messageRow {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--borderLight);
+}
+
+#messageHeader {
+    font-weight: bold;
+    color: #666;
+    background-color: #fafafa;
+}
+
+.messageRow {
+    cursor: pointer;
+}
+
+/* 셀 공통 스타일 */
+.checkCell { width: 50px; text-align: center; }
+.typeCell { width: 80px; text-align: center; }
+.userCell { width: 120px; font-weight: 600; }
+.titleCell { flex: 1; padding: 0 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dateCell { width: 150px; text-align: right; color: var(--textGray); }
+
+/* 상태 태그 */
+.tagReceived { color: #28a745; border: 1px solid #28a745; padding: 2px 6px; border-radius: 4px; }
+.tagSent { color: #007bff; border: 1px solid #007bff; padding: 2px 6px; border-radius: 4px; }

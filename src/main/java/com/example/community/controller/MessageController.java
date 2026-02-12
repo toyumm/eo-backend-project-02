@@ -14,10 +14,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -28,9 +30,6 @@ public class MessageController {
 
     private final MessageService messageService;
 
-    /**
-     * 현재 로그인한 사용자의 정보를 SecurityContextHolder에서 직접 꺼내는 메서드
-     */
     private String getCurrentUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
@@ -40,40 +39,39 @@ public class MessageController {
     }
 
     /**
-     * [테스트용 임시 수정] 받은 쪽지함 조회
-     * HTML 파일이 없는 상태에서 테스트하기 위해 @ResponseBody를 추가하여 JSON 데이터를 직접 반환함
+     * 전체 쪽지함 화면 조회
+     * 모든 메뉴 클릭 시 에러 방지를 위해 여러 경로를 수용
      */
-    @GetMapping("/received")
-    @ResponseBody
-    public ResponseEntity<Page<MessageDto>> receivedPage(@RequestParam(defaultValue = "1") int page) {
+    @GetMapping({"/all", "/received", "/sent", "/trash", "/write"})
+    public String allMessagesPage(@RequestParam(defaultValue = "1") int page, Model model) {
         String username = getCurrentUsername();
         Pageable pageable = PageRequest.of(page - 1, 10, Sort.by(Sort.Direction.DESC, "id"));
 
-        // 서비스 로직 호출
-        Page<MessageDto> messagePage = messageService.getMessages("received", username, pageable);
-
-        return ResponseEntity.ok(messagePage);
+        // 초기 화면은 기본적으로 'all' 리스트를 보여준다.
+        Page<MessageDto> messagePage = messageService.getMessages("all", username, pageable);
+        model.addAttribute("messages", messagePage);
+        return "message/message";
     }
 
     /**
      * 목록 조회 (API)
+     * 겹치는 경로 문제를 피하기 위해 /api/list로 변경
      */
-    @GetMapping("/list")
+    @GetMapping("/api/list")
     @ResponseBody
     public ResponseEntity<Page<MessageDto>> list(
             @RequestParam String type,
             @RequestParam(defaultValue = "1") int page) {
-
         String username = getCurrentUsername();
         Pageable pageable = PageRequest.of(page - 1, 10, Sort.by(Sort.Direction.DESC, "id"));
-
         return ResponseEntity.ok(messageService.getMessages(type, username, pageable));
     }
 
     /**
      * 쪽지 발송 (API)
+     * 주소창 입력(GET) 시 405 방지를 위해 경로를 /api/write로 분리
      */
-    @PostMapping("/write")
+    @PostMapping("/api/write")
     @ResponseBody
     public ResponseEntity<String> write(@Valid @RequestBody MessageDto messageDto) {
         String username = getCurrentUsername();
@@ -84,7 +82,7 @@ public class MessageController {
     /**
      * 상세 조회 (API)
      */
-    @GetMapping("/read")
+    @GetMapping("/api/read")
     @ResponseBody
     public ResponseEntity<MessageDto> read(@RequestParam Long id) {
         String username = getCurrentUsername();
@@ -94,7 +92,7 @@ public class MessageController {
     /**
      * 휴지통 이동 (API)
      */
-    @PostMapping("/trash")
+    @PostMapping("/api/trash")
     @ResponseBody
     public ResponseEntity<Void> moveToTrash(@RequestParam Long id, @RequestParam String userType) {
         String username = getCurrentUsername();
@@ -105,7 +103,7 @@ public class MessageController {
     /**
      * 복구 하기 (API)
      */
-    @PostMapping("/restore")
+    @PostMapping("/api/restore")
     @ResponseBody
     public ResponseEntity<Void> restore(@RequestParam Long id, @RequestParam String userType) {
         String username = getCurrentUsername();
@@ -114,9 +112,21 @@ public class MessageController {
     }
 
     /**
+     * 선택 삭제 (다중 삭제 API)
+     */
+    @PostMapping("/api/delete/bulk")
+    @ResponseBody
+    public ResponseEntity<Void> deleteBulk(@RequestBody Map<String, List<Long>> payload) {
+        String username = getCurrentUsername();
+        List<Long> ids = payload.get("ids");
+        // messageService.deleteBulk(ids, username);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
      * 영구 삭제 (API)
      */
-    @PostMapping("/delete")
+    @PostMapping("/api/delete")
     @ResponseBody
     public ResponseEntity<Void> delete(@RequestParam Long id, @RequestParam String userType) {
         String username = getCurrentUsername();
