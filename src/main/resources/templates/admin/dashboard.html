@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>관리자 대시보드 - 걸어서 맛집으로</title>
-    <link rel="stylesheet" href="/css/reset.css">
     <link rel="stylesheet" href="/css/dashboard.css">
-    <script src="/js/dashboard.js"></script>
+    <script src="/js/dashboard.js" defer></script>
 </head>
 <body>
 <!-- Header -->
@@ -17,7 +16,8 @@
 <!-- Banner -->
 <div id="banner">
     <div id="banner-content">
-        <h1 id="banner-title">🎯 관리자 대시보드</h1>
+        <img src="/images/logo2.png" alt="배너 로고" id="banner-logo">
+        <h1 id="banner-title"> 관리자 대시보드</h1>
     </div>
 </div>
 
@@ -29,7 +29,6 @@
             <h3 id="menu-title">관리 메뉴</h3>
             <div id="menu-list">
                 <div id="menu-users" data-section="users">사용자 관리</div>
-                <div id="menu-boards" data-section="boards">게시판 관리</div>
                 <div id="menu-posts" data-section="posts">게시물 관리</div>
                 <div id="menu-comments" data-section="comments">댓글 관리</div>
                 <div id="menu-reports" data-section="reports">사용자 신고</div>
@@ -63,29 +62,6 @@
                 </tbody>
             </table>
             <div id="users-pagination"></div>
-        </section>
-
-        <!-- 게시판 관리 Section -->
-        <section id="boards-section">
-            <div id="boards-header">
-                <h2>게시판 관리</h2>
-                <button id="board-add-btn" type="button">➕ 게시판 추가</button>
-            </div>
-            <table id="boards-table">
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>게시판 이름</th>
-                    <th>생성일</th>
-                    <th>관리</th>
-                </tr>
-                </thead>
-                <tbody id="boards-tbody">
-                <tr>
-                    <td colspan="4">데이터를 불러오는 중...</td>
-                </tr>
-                </tbody>
-            </table>
         </section>
 
         <!-- 게시물 관리 Section -->
@@ -140,7 +116,7 @@
         <!-- 사용자 신고 Section -->
         <section id="reports-section">
             <div id="reports-header">
-                <h2>사용자 신고</h2>
+                <h2> 사용자 신고</h2>
             </div>
             <div id="reports-empty">
                 <p>신고 기능은 준비중입니다.</p>
@@ -154,26 +130,10 @@
             <div id="admin-profile">👑</div>
             <div id="admin-name">관리자</div>
             <div id="admin-role">ADMINISTRATOR</div>
+            <button id="main-page-btn" type="button">메인페이지</button>
             <button id="logout-btn" type="button">로그아웃</button>
         </div>
     </aside>
 </div>
-
-<!-- 게시판 추가/수정 Modal -->
-<div id="board-modal">
-    <div id="board-modal-content">
-        <h3 id="board-modal-title">게시판 추가</h3>
-        <div id="board-form">
-            <label for="board-title-input">게시판 이름</label>
-            <input type="text" id="board-title-input" placeholder="게시판 이름을 입력하세요">
-        </div>
-        <div id="board-modal-actions">
-            <button id="board-cancel-btn" type="button">취소</button>
-            <button id="board-save-btn" type="button">저장</button>
-        </div>
-    </div>
-</div>
-
-
 </body>
 </html>
