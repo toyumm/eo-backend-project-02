@@ -46,4 +46,7 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
             @Param("searchType") String searchType,
             @Param("keyword") String keyword,
             Pageable pageable);
+
+    // 내가 작성한 게시글 목록
+    Page<PostEntity> findByUserId(Long userId, Pageable pageable);
 }

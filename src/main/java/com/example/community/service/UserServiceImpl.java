@@ -10,12 +10,14 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -50,17 +52,20 @@ public class UserServiceImpl implements UserService {
         log.info("signup end : username = {}", savedEntity.getId());
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Optional<UserDto> read(@NotNull Long id) {
         return userRepository.findById(id).map(UserDto::from);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Optional<UserDto> read(@NotNull String username) {
         return userRepository.findByUsername(username).map(UserDto::from);
     }
 
     // 회원 수정
+    @Transactional
     @Override
     public Optional<UserDto> update(@NotNull UserDto userDto) {
         log.info("update: id={}", userDto.getId());
@@ -106,7 +111,6 @@ public class UserServiceImpl implements UserService {
 
 
      // 아이디 사용 가능 여부 확인
-
     private void checkUsernameAvailability(@NotNull String username) {
         if (userRepository.existsByUsername(username)) {
             throw new IllegalArgumentException("Username is already in use");
@@ -144,6 +148,52 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean existsByNickname(String nickname) {
         return userRepository.existsByNickname(nickname);
+    }
+
+    // 마이페이지 닉네임 수정
+    @Transactional
+    @Override
+    public void updateNickname(Long userId, String nickname) {
+        log.info("update nickname: userId={}, nickname={}", userId, nickname);
+
+        // 닉네임 중복 확인
+        if (userRepository.existsByNickname(nickname)) {
+            throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
+        }
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        user.updateNickname(nickname);
+
+        log.info("닉네임 수정 완료: userId={}", userId);
+    }
+
+    // 마이페이지 비밀번호 변경
+    @Transactional
+    @Override
+    public void changePassword(Long userId,
+                               String currentPassword,
+                               String newPassword,
+                               String newPasswordConfirm) {
+
+        log.info("비밀번호 변경 시도: userId={}", userId);
+
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다");
+        }
+
+        if (!newPassword.equals(newPasswordConfirm)) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다");
+        }
+
+        // 암호화 후 저장
+        String encoded = passwordEncoder.encode(newPassword);
+        user.updatePassword(encoded);
+
+        log.info("비밀번호 변경 완료: userId={}", userId);
     }
 
 }

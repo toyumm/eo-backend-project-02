@@ -2,6 +2,7 @@ package com.example.community.service;
 
 
 import com.example.community.domain.comment.CommentDto;
+import com.example.community.domain.post.PostDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -17,5 +18,13 @@ public interface CommentService {
 
     // 전체 댓글 조회용
     Page<CommentDto> getAllComments(Pageable pageable);
+
+    /**
+     * 내가 작성한 댓글 목록 조회
+     * @param userId 작성자(로그인 사용자) ID
+     * @param pageable 페이징 정보
+     * @return 댓글 달린 게시물
+     */
+    Page<CommentDto> getMyComments(Long userId, Pageable pageable);
 }
 

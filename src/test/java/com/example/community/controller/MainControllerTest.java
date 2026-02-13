@@ -42,19 +42,23 @@ class MainControllerTest {
     // 테스트 실행 전 데이터 초기화
     @BeforeEach
     void setUp() {
-        log.info("=== 데이터 초기화 시작 ===");
+        log.info("데이터 초기화");
 
         postRepository.deleteAll();
         boardRepository.deleteAll();
 
         // 공지 카테고리 게시판 생성
-        BoardEntity noticeBoard = boardRepository.save(
-                BoardEntity.builder().title("커뮤니티 공지").build()
+        BoardEntity noticeBoard = boardRepository.save(BoardEntity.builder()
+                        .title("커뮤니티 공지")
+                        .category("NOTICE")
+                        .build()
         );
 
         // 일반 게시판 생성
-        BoardEntity freeBoard = boardRepository.save(
-                BoardEntity.builder().title("자유게시판").build()
+        BoardEntity freeBoard = boardRepository.save(BoardEntity.builder()
+                        .title("자유게시판")
+                        .category("FREE")
+                        .build()
         );
 
         // 공지 게시글 생성
@@ -110,8 +114,10 @@ class MainControllerTest {
                         .build()
         ));
 
-        log.info("=== 데이터 초기화 완료 ===");
+        log.info("데이터 초기화 완료");
     }
+
+
 
     /**
      * 기본 메인 페이지 로드 테스트
@@ -119,7 +125,7 @@ class MainControllerTest {
     @Test
     @DisplayName("index - 메인 페이지 기본 로드 및 모델 속성 확인")
     void testIndex() throws Exception {
-        log.info("=== testIndex 시작 ===");
+        log.info("testIndex 시작");
 
         mockMvc.perform(get("/"))
                 .andDo(print())
@@ -138,7 +144,7 @@ class MainControllerTest {
                 .andExpect(model().attribute("searchType", ""))
                 .andExpect(model().attribute("keyword", ""));
 
-        log.info("=== testIndex 완료 ===");
+        log.info("testIndex 완료");
     }
 
     /**
@@ -147,7 +153,7 @@ class MainControllerTest {
     @Test
     @DisplayName("index - 공지 카테고리 없을 때 noticeList 빈 배열")
     void testIndex_whenNoNoticeBoards() throws Exception {
-        log.info("=== testIndex_whenNoNoticeBoards 시작 ===");
+        log.info("testIndex_whenNoNoticeBoards 시작");
 
         postRepository.deleteAll();
         boardRepository.deleteAll();
@@ -161,7 +167,7 @@ class MainControllerTest {
                 .andExpect(model().attribute("boardList", hasSize(1)))
                 .andExpect(model().attribute("noticeList", hasSize(0)));
 
-        log.info("=== testIndex_whenNoNoticeBoards 완료 ===");
+        log.info("testIndex_whenNoNoticeBoards 완료");
     }
 
     /**
@@ -170,7 +176,7 @@ class MainControllerTest {
     @Test
     @DisplayName("searchByTitle - 제목으로 검색")
     void testSearchByTitle() throws Exception {
-        log.info("=== testSearchByTitle 시작 ===");
+        log.info("testSearchByTitle 시작");
 
         mockMvc.perform(get("/")
                         .param("searchType", "title")
@@ -182,7 +188,7 @@ class MainControllerTest {
                 .andExpect(model().attribute("keyword", "검색키워드"))
                 .andExpect(model().attributeExists("postPage"));
 
-        log.info("=== testSearchByTitle 완료 ===");
+        log.info("testSearchByTitle 완료");
     }
 
     /**

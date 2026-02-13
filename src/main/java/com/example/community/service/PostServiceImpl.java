@@ -2,6 +2,7 @@ package com.example.community.service;
 
 import com.example.community.domain.post.PostDto;
 import com.example.community.domain.post.PostEntity;
+import com.example.community.domain.user.UserEntity;
 import com.example.community.persistence.PostRepository;
 import com.example.community.persistence.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -202,5 +203,18 @@ public class PostServiceImpl implements PostService {
         Page<PostEntity> entities = postRepository.findByBoardIdAndSearchType(boardId, searchType, keyword, pageable);
 
         return entities.map(this::convertToDto);
+    }
+
+    @Override
+    public Page<PostDto> getMyPosts(Long userId, Pageable pageable) {
+        log.info("내 게시글 조회: userId={}, page={}, size={}",
+                userId, pageable.getPageNumber(), pageable.getPageSize());
+
+        String nickname = userRepository.findById(userId)
+                .map(UserEntity::getNickname)
+                .orElse("알수없음");
+
+        return postRepository.findByUserId(userId, pageable)
+                .map(post -> PostDto.from(post, nickname));
     }
 }

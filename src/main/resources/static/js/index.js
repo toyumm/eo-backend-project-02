@@ -227,3 +227,19 @@ function openMessagePopup() {
     window.open(url, name, options);
 }
 
+// 마이페이지 팝업
+function openMypage() {
+    const width = 700;
+    const height = 750;
+
+    // 화면 중앙 배치
+    const left = Math.max(0, (window.screen.width - width) / 2);
+    const top = Math.max(0, (window.screen.height - height) / 2);
+
+    window.open(
+        "/mypage",
+        "mypagePopup",
+        `width=${width},height=${height},top=${top},left=${left},resizable=no,scrollbars=yes,menubar=no,toolbar=no,location=no,status=no`
+    );
+}
+

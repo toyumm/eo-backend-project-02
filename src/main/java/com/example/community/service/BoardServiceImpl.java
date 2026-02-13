@@ -25,6 +25,12 @@ public class BoardServiceImpl implements BoardService {
 
         // 테스트중 임시 주석
         // checkTitleAvailability(boardDto.getTitle());
+        // category가 비어있으면 기본값 지정
+        if (boardDto.getCategory() == null || boardDto.getCategory().isBlank()) {
+            boardDto.setCategory("FREE");
+        }
+
+        checkTitleAvailability(boardDto.getTitle());
 
         BoardEntity savedEntity = boardRepository.save(BoardEntity.from(boardDto));
 
@@ -71,6 +77,15 @@ public class BoardServiceImpl implements BoardService {
         log.info("GET LIST: All Boards");
 
         return boardRepository.findAll().stream()
+                .map(BoardDto::from)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<BoardDto> getNoticeBoardList() {
+        log.info("GET NOTICE BOARD LIST");
+
+        return boardRepository.findByCategory("NOTICE").stream()
                 .map(BoardDto::from)
                 .collect(Collectors.toList());
     }

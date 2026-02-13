@@ -2,6 +2,8 @@ package com.example.community.persistence;
 
 import com.example.community.domain.comment.CommentEntity;
 import com.example.community.domain.post.PostEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -24,4 +26,12 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
      */
 
     List<CommentEntity> findByPostEntityId(Long postId);
+
+    /**
+     * 마이페이지에서 내 댓글 조회
+     * @param userId 확인할 유저의 ID
+     * @param pageable
+     * @return 댓글이 달린 페이지
+     */
+    Page<CommentEntity> findByUserId(Long userId, Pageable pageable);
 }

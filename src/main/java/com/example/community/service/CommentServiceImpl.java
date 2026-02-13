@@ -2,6 +2,9 @@ package com.example.community.service;
 
 import com.example.community.domain.comment.CommentDto;
 import com.example.community.domain.comment.CommentEntity;
+import com.example.community.domain.post.PostDto;
+import com.example.community.domain.post.PostEntity;
+import com.example.community.domain.user.UserEntity;
 import com.example.community.persistence.CommentRepository;
 import com.example.community.persistence.PostRepository;
 import com.example.community.persistence.UserRepository;
@@ -131,4 +134,14 @@ public class CommentServiceImpl implements CommentService {
         return commentRepository.findAll(pageable)
                 .map(this::convertToDto);
     }
+
+    @Override
+    public Page<CommentDto> getMyComments(Long userId, Pageable pageable) {
+        log.info("내 댓글 조회: userId={}, page={}, size={}",
+                userId, pageable.getPageNumber(), pageable.getPageSize());
+
+        return commentRepository.findByUserId(userId, pageable)
+                .map(CommentDto::from);
+    }
+
 }

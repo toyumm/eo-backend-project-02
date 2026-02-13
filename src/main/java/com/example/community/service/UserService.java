@@ -39,4 +39,15 @@ public interface UserService {
     닉네임 중복 체크
      */
     boolean existsByNickname(String nickname);
+
+    /*
+    마이페이지 닉네임 수정
+    */
+    void updateNickname(Long userId, String nickname);
+
+    /*
+    비밀번호 변경
+     */
+    void changePassword(Long userId, String currentPassword, String newPassword, String newPasswordConfirm);
+
 }
