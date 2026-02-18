@@ -56,13 +56,3 @@ spring:
           timeout: 5000
           writetimeout: 5000
 
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: 225525838906-ok6gspijgjudsgs16bt0plua5idlkqg8.apps.googleusercontent.com
-            client-secret: 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
-            scope:
-              - email
-              - profile
