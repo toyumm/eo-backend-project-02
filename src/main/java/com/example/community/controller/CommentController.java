@@ -25,6 +25,7 @@ public class CommentController {
 
     private final CommentService commentService;
 
+    // 댓글 작성 (로그인 필수)
     @PostMapping
     public ResponseEntity<?> create(
             @PathVariable Long postId,
@@ -38,6 +39,7 @@ public class CommentController {
                 .orElseGet(() -> ResponseEntity.status(403).body("댓글 작성 권한이 없습니다."));
     }
 
+    // 댓글 단일 조회 (로그인 불필요)
     @GetMapping("/{commentId}")
     public ResponseEntity<CommentDto> read(
             @PathVariable Long postId,
@@ -48,6 +50,7 @@ public class CommentController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    // 댓글 수정 (로그인 필수)
     @PutMapping("/{commentId}")
     public ResponseEntity<?> update(
             @PathVariable Long postId,
@@ -63,6 +66,7 @@ public class CommentController {
                 .orElseGet(() -> ResponseEntity.status(403).body("댓글 수정 권한이 없습니다."));
     }
 
+    // 댓글 삭제 (로그인 필수)
     @DeleteMapping("/{commentId}")
     public ResponseEntity<Map<String, Object>> delete(
             @PathVariable Long postId,
@@ -86,14 +90,16 @@ public class CommentController {
         return ResponseEntity.ok(response);
     }
 
-    // 특정 게시글 모든 댓글 조회
+    // 특정 게시글 모든 댓글 조회 (로그인 불필요 - 누구나 볼 수 있음)
     @GetMapping
     public ResponseEntity<List<CommentDto>> readAll(
             @PathVariable Long postId
     ) {
+        log.info("readAll postId = {}", postId);
         return ResponseEntity.ok(commentService.getList(postId));
     }
 
+    // 검증 예외 처리
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(
             MethodArgumentNotValidException e
@@ -104,6 +110,7 @@ public class CommentController {
         return ResponseEntity.badRequest().body(errors);
     }
 
+    // 현재 로그인한 사용자의 ID 조회 (댓글 작성/수정/삭제 시 필요)
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 

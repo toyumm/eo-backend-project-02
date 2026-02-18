@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -118,12 +119,26 @@ public class PostController {
     }
 
     @GetMapping("/read")
-    public String read(@PathVariable Long boardId, @RequestParam Long id, Criteria criteria, Model model) {
+    public String read(@PathVariable Long boardId,
+                       @RequestParam Long id,
+                       Criteria criteria,
+                       Model model,
+                       @AuthenticationPrincipal CustomUserDetails userDetails) {
         log.info("read boardId={}, id={}, criteria={}", boardId, id, criteria);
 
         model.addAttribute("boardId", boardId);
         model.addAttribute("criteria", criteria);
         model.addAttribute("postDto", postService.read(id));
+
+        // 🔧 현재 사용자 ID와 관리자 여부를 Model에 추가 (댓글 기능용)
+        Long currentUserId = null;
+        boolean isAdmin = false;
+        if (userDetails != null) {
+            currentUserId = userDetails.getUser().getId();
+            isAdmin = userDetails.getUser().getRole().toString().equals("ADMIN");
+        }
+        model.addAttribute("currentUserId", currentUserId);
+        model.addAttribute("isAdmin", isAdmin);
 
         // 인기 게시글 데이터 조회
         Pageable popularPageable = PageRequest.of(0, 10);
