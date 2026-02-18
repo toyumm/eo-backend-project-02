@@ -224,7 +224,7 @@
             <!-- 로그인 후: 사용자 정보 -->
             <div id="auth-box2" sec:authorize="isAuthenticated()">
                 <div class="user-info">
-                    <p><span sec:authentication="name">사용자</span>님</p>
+                    <p><span sec:authentication="principal.nickname">사용자</span>님</p>
                     <div class="profile-links">
                         <a th:href="@{/mypage}" onclick="openMypage(); return false;">마이페이지</a>
                         <a th:href="@{/messages/all}" onclick="openMessagePopup(this.href); return false;">쪽지함</a>
