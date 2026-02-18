@@ -53,6 +53,7 @@ public class CommentEntity {
     this.userId = userId;
     this.postEntity = postEntity;
     this.content = content;
+
 //
 //        this.commentsCount = (commentsCount == null ? 0 : commentsCount);
     }

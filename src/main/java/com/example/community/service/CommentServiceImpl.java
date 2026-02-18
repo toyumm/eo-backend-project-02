@@ -83,10 +83,11 @@ public class CommentServiceImpl implements CommentService {
     public Optional<CommentDto> update(CommentDto commentDto, Long userId) {
         if (userId == null) return Optional.empty();
 
-        if (isAdmin(userId)) {
-            log.info("UPDATE DENIED: admin cannot update comment. userId={}", userId);
-            return Optional.empty();
-        }
+        // 오류라인한 주석처리
+//        if (isAdmin(userId)) {
+//            log.info("UPDATE DENIED: admin cannot update comment. userId={}", userId);
+//            return Optional.empty();
+//        }
 
         return commentRepository.findById(commentDto.getId())
                 .filter(comment -> isOwner(comment, userId))

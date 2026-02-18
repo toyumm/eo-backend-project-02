@@ -1,208 +1,306 @@
-const COMMENT_API = `/api/posts/${postId}/comments`;
+// post-read.js - 댓글 기능 (admin-dashboard.js 스타일)
 
-const $list = document.getElementById('commentList');
-const $count = document.getElementById('commentCount');
-const $empty = document.getElementById('emptyCommentMsg');
+// 페이지 로드 시 실행
+document.addEventListener('DOMContentLoaded', function() {
 
-const $new = document.getElementById('newComment');
-const $btnCreate = document.getElementById('btnCreateComment');
-const $err = document.getElementById('commentError');
+    // URL에서 postId 추출
+    var urlParams = new URLSearchParams(window.location.search);
+    var postId = urlParams.get('id');
 
-function getCsrf() {
-    const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
-    const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
-    if (!token || !header) return null;
-    return { token, header };
-}
+    if (!postId) {
+        console.error('postId를 찾을 수 없습니다.');
+        return;
+    }
 
-function withCsrf(headers = {}) {
-    const csrf = getCsrf();
-    if (!csrf) return headers;
-    return { ...headers, [csrf.header]: csrf.token };
-}
+    var COMMENT_API = '/api/posts/' + postId + '/comments';
 
-async function fetchJson(url, options = {}) {
-    const res = await fetch(url, {
-        credentials: 'same-origin',
-        ...options,
-        headers: withCsrf({
-            'Content-Type': 'application/json',
-            ...(options.headers || {})
+    // 사용자 정보 가져오기 (data 속성에서)
+    var postBox = document.querySelector('.post-box');
+    var CURRENT_USER_ID = postBox ? parseInt(postBox.getAttribute('data-user-id')) : null;
+    var IS_ADMIN = postBox ? postBox.getAttribute('data-is-admin') === 'true' : false;
+
+    console.log('Current User ID:', CURRENT_USER_ID);
+    console.log('Is Admin:', IS_ADMIN);
+
+    // DOM 요소
+    var commentList = document.getElementById('commentList');
+    var commentCount = document.getElementById('commentCount');
+    var newComment = document.getElementById('newComment');
+    var btnCreateComment = document.getElementById('btnCreateComment');
+    var commentError = document.getElementById('commentError');
+
+    // CSRF 토큰 가져오기
+    function getCsrfToken() {
+        var tokenMeta = document.querySelector('meta[name="_csrf"]');
+        var headerMeta = document.querySelector('meta[name="_csrf_header"]');
+
+        console.log('CSRF Meta:', tokenMeta, headerMeta);
+
+        if (tokenMeta && headerMeta) {
+            var token = tokenMeta.getAttribute('content');
+            var header = headerMeta.getAttribute('content');
+            console.log('CSRF Token:', token);
+            console.log('CSRF Header:', header);
+            return {
+                token: token,
+                header: header
+            };
+        }
+        console.warn('CSRF 토큰을 찾을 수 없습니다!');
+        return null;
+    }
+
+    // Fetch 헤더에 CSRF 추가 (CSRF 없으면 생략)
+    function getFetchHeaders() {
+        var headers = {
+            'Content-Type': 'application/json'
+        };
+
+        var csrf = getCsrfToken();
+        if (csrf && csrf.token && csrf.header) {
+            headers[csrf.header] = csrf.token;
+            console.log('CSRF 헤더 추가:', csrf.header, '=', csrf.token);
+        } else {
+            console.log('CSRF 토큰 없음 (비활성화 상태)');
+        }
+
+        return headers;
+    }
+
+    // 날짜 포맷팅
+    function formatDate(dateString) {
+        if (!dateString) return '-';
+        var date = new Date(dateString);
+        var year = date.getFullYear();
+        var month = String(date.getMonth() + 1).padStart(2, '0');
+        var day = String(date.getDate()).padStart(2, '0');
+        var hours = String(date.getHours()).padStart(2, '0');
+        var minutes = String(date.getMinutes()).padStart(2, '0');
+        return year + '.' + month + '.' + day + ' ' + hours + ':' + minutes;
+    }
+
+    // HTML 이스케이프
+    function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // 댓글 목록 렌더링
+    function renderComments(comments) {
+        commentCount.textContent = comments.length;
+
+        if (!comments || comments.length === 0) {
+            commentList.innerHTML = '<div class="empty-comment">아직 댓글이 없습니다.</div>';
+            return;
+        }
+
+        var html = '';
+        comments.forEach(function(comment) {
+            var isOwner = (CURRENT_USER_ID && comment.userId === CURRENT_USER_ID);
+
+            html += '<div class="comment-item" data-id="' + comment.id + '">';
+            html += '  <div class="comment-body">';
+            html += '    <div class="comment-top">';
+            html += '      <div class="comment-writer">' + escapeHtml(comment.writer || 'unknown') + '</div>';
+            html += '      <div class="comment-time">' + formatDate(comment.createdAt) + '</div>';
+            html += '    </div>';
+            html += '    <div class="comment-content" data-content>' + escapeHtml(comment.content || '') + '</div>';
+
+            // 수정 영역 (숨김)
+            html += '    <div class="comment-editbox" style="display:none;">';
+            html += '      <textarea maxlength="200"></textarea>';
+            html += '      <div class="row">';
+            html += '        <button type="button" onclick="cancelEdit(this)">취소</button>';
+            html += '        <button type="button" onclick="saveEdit(this, ' + comment.id + ')">저장</button>';
+            html += '      </div>';
+            html += '    </div>';
+
+            // 버튼 영역 (조건부 표시)
+            if (isOwner || IS_ADMIN) {
+                html += '    <div class="comment-footer">';
+                html += '      <div class="comment-actions">';
+
+                // 작성자만 수정 가능
+                if (isOwner) {
+                    html += '        <button type="button" onclick="editComment(this)">수정</button>';
+                }
+
+                // 작성자 또는 관리자는 삭제 가능
+                if (isOwner || IS_ADMIN) {
+                    html += '        <button type="button" class="del" onclick="deleteComment(' + comment.id + ')">삭제</button>';
+                }
+
+                html += '      </div>';
+                html += '    </div>';
+            }
+
+            html += '  </div>';
+            html += '</div>';
+        });
+
+        commentList.innerHTML = html;
+    }
+
+    // 댓글 목록 로드
+    function loadComments() {
+        fetch(COMMENT_API, {
+            method: 'GET',
+            credentials: 'same-origin'
         })
-    });
-
-    if (res.status === 401) throw new Error('로그인이 필요합니다.');
-    if (res.status === 403) throw new Error('권한이 없습니다.');
-    if (res.status === 404) throw new Error('요청한 리소스를 찾을 수 없습니다.');
-    if (!res.ok) {
-        const t = await res.text();
-        throw new Error(t || `HTTP ${res.status}`);
-    }
-    if (res.status === 204) return null;
-    return res.json();
-}
-
-function formatDateTime(iso) {
-    if (!iso) return '';
-    const d = new Date(iso);
-    const yy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mi = String(d.getMinutes()).padStart(2, '0');
-    return `${yy}.${mm}.${dd} ${hh}:${mi}`;
-}
-
-function escapeHtml(str) {
-    return String(str)
-        .replaceAll('&','&amp;')
-        .replaceAll('<','&lt;')
-        .replaceAll('>','&gt;')
-        .replaceAll('"','&quot;')
-        .replaceAll("'","&#039;");
-}
-
-
-function render(comments) {
-    $count.textContent = String(comments.length);
-    $empty.style.display = comments.length ? 'none' : 'block';
-
-    $list.innerHTML = comments.map(c => {
-        const isOwner = (currentUserId != null && Number(c.userId) === Number(currentUserId));
-        const showDelete = isOwner || isAdmin;
-        const showEdit = isOwner && !isAdmin;
-
-        return `
-                <div class="comment-item" id="comment-${c.id}" data-id="${c.id}">
-                    <div class="comment-body">
-                        <div class="comment-top">
-                            <div class="comment-writer">${escapeHtml(c.writer ?? 'unknown')}</div>
-                            <div class="comment-time">${formatDateTime(c.createdAt)}</div>
-                        </div>
-
-                        <div class="comment-content" data-content>${escapeHtml(c.content ?? '')}</div>
-
-                        <div class="comment-editbox" data-editbox>
-                            <textarea maxlength="200"></textarea>
-                            <div class="row">
-                                <button type="button" data-action="cancel">취소</button>
-                                <button type="button" data-action="save">저장</button>
-                            </div>
-                        </div>
-
-                        <div class="comment-footer" style="${(showEdit || showDelete) ? '' : 'display:none'}">
-                            <div class="comment-actions">
-                                ${showEdit ? `<button type="button" data-action="edit">수정</button>` : ``}
-                                ${showDelete ? `<button type="button" class="del" data-action="delete">삭제</button>` : ``}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-    }).join('');
-}
-
-async function loadComments() {
-    const data = await fetchJson(COMMENT_API, { method: 'GET' });
-    render(Array.isArray(data) ? data : []);
-}
-
-async function createComment() {
-    if (!$new) return;
-
-    const content = $new.value.trim();
-    $err.style.display = 'none';
-    $err.textContent = '';
-
-    if (content.length < 1 || content.length > 200) {
-        $err.style.display = 'block';
-        $err.textContent = '댓글은 1~200자여야 합니다.';
-        return;
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('댓글 목록을 불러올 수 없습니다.');
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                renderComments(data);
+            })
+            .catch(function(error) {
+                console.error('Error loading comments:', error);
+                commentList.innerHTML = '<div class="empty-comment">댓글을 불러오는데 실패했습니다.</div>';
+            });
     }
 
-    await fetchJson(COMMENT_API, {
-        method: 'POST',
-        body: JSON.stringify({ content })
-    });
+    // 댓글 등록
+    function createComment() {
+        var content = newComment.value.trim();
 
-    $new.value = '';
-    await loadComments();
-}
+        console.log('=== 댓글 작성 시작 ===');
+        console.log('postId:', postId);
+        console.log('content:', content);
+        console.log('API URL:', COMMENT_API);
 
-function openEditBox($item) {
-    const $editBox = $item.querySelector('[data-editbox]');
-    const $content = $item.querySelector('[data-content]');
-    const $ta = $editBox.querySelector('textarea');
+        // 에러 메시지 초기화
+        commentError.style.display = 'none';
+        commentError.textContent = '';
 
-    $ta.value = $content.textContent.trim();
-    $editBox.style.display = 'block';
-    $content.style.display = 'none';
-}
-
-function closeEditBox($item) {
-    const $editBox = $item.querySelector('[data-editbox]');
-    const $content = $item.querySelector('[data-content]');
-    $editBox.style.display = 'none';
-    $content.style.display = 'block';
-}
-
-async function saveEdit($item) {
-    if (isAdmin) {
-        alert('관리자는 댓글을 수정할 수 없습니다.');
-        return;
-    }
-
-    const id = $item.dataset.id;
-    const $editBox = $item.querySelector('[data-editbox]');
-    const $ta = $editBox.querySelector('textarea');
-    const content = $ta.value.trim();
-
-    if (content.length < 1 || content.length > 200) {
-        alert('댓글은 1~200자여야 합니다.');
-        return;
-    }
-
-    await fetchJson(`${COMMENT_API}/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ id: Number(id), postId: postId, content })
-    });
-
-    await loadComments();
-}
-
-async function deleteComment(id) {
-    if (!confirm('댓글을 삭제할까요?')) return;
-    await fetchJson(`${COMMENT_API}/${id}`, { method: 'DELETE' });
-    await loadComments();
-}
-
-window.addEventListener('load', async () => {
-    await loadComments();
-
-    if ($btnCreate) $btnCreate.addEventListener('click', async () => {
-        try { await createComment(); }
-        catch (e) {
-            $err.style.display = 'block';
-            $err.textContent = e.message;
+        // 유효성 검사
+        if (content.length < 1 || content.length > 200) {
+            commentError.style.display = 'block';
+            commentError.textContent = '댓글은 1~200자여야 합니다.';
+            return;
         }
-    });
 
-    $list.addEventListener('click', async (e) => {
-        const btn = e.target.closest('button');
-        if (!btn) return;
+        var requestBody = { content: content };
+        console.log('Request Body:', JSON.stringify(requestBody));
+        console.log('Headers:', getFetchHeaders());
 
-        const $item = e.target.closest('.comment-item');
-        if (!$item) return;
+        fetch(COMMENT_API, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: getFetchHeaders(),
+            body: JSON.stringify(requestBody)
+        })
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('댓글 작성에 실패했습니다.');
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                newComment.value = '';
+                loadComments();
+            })
+            .catch(function(error) {
+                console.error('Error creating comment:', error);
+                commentError.style.display = 'block';
+                commentError.textContent = error.message || '댓글 작성에 실패했습니다.';
+            });
+    }
 
-        const action = btn.dataset.action;
+    // 댓글 수정 모드 열기
+    window.editComment = function(button) {
+        var commentItem = button.closest('.comment-item');
+        var contentDiv = commentItem.querySelector('[data-content]');
+        var editBox = commentItem.querySelector('.comment-editbox');
+        var textarea = editBox.querySelector('textarea');
 
-        try {
-            if (action === 'edit') openEditBox($item);
-            if (action === 'cancel') closeEditBox($item);
-            if (action === 'save') await saveEdit($item);
-            if (action === 'delete') await deleteComment($item.dataset.id);
-        } catch (err) {
-            alert(err.message || '요청 실패');
+        textarea.value = contentDiv.textContent.trim();
+        contentDiv.style.display = 'none';
+        editBox.style.display = 'block';
+    };
+
+    // 댓글 수정 취소
+    window.cancelEdit = function(button) {
+        var commentItem = button.closest('.comment-item');
+        var contentDiv = commentItem.querySelector('[data-content]');
+        var editBox = commentItem.querySelector('.comment-editbox');
+
+        editBox.style.display = 'none';
+        contentDiv.style.display = 'block';
+    };
+
+    // 댓글 수정 저장
+    window.saveEdit = function(button, commentId) {
+        var commentItem = button.closest('.comment-item');
+        var textarea = commentItem.querySelector('.comment-editbox textarea');
+        var content = textarea.value.trim();
+
+        if (content.length < 1 || content.length > 200) {
+            alert('댓글은 1~200자여야 합니다.');
+            return;
         }
-    });
+
+        fetch(COMMENT_API + '/' + commentId, {
+            method: 'PUT',
+            credentials: 'same-origin',
+            headers: getFetchHeaders(),
+            body: JSON.stringify({
+                id: commentId,
+                postId: postId,
+                content: content
+            })
+        })
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('댓글 수정에 실패했습니다.');
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                loadComments();
+            })
+            .catch(function(error) {
+                console.error('Error updating comment:', error);
+                alert(error.message || '댓글 수정에 실패했습니다.');
+            });
+    };
+
+    // 댓글 삭제
+    window.deleteComment = function(commentId) {
+        if (!confirm('댓글을 삭제할까요?')) return;
+
+        fetch(COMMENT_API + '/' + commentId, {
+            method: 'DELETE',
+            credentials: 'same-origin',
+            headers: getFetchHeaders()
+        })
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('댓글 삭제에 실패했습니다.');
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.success) {
+                    loadComments();
+                } else {
+                    alert(data.message || '댓글 삭제에 실패했습니다.');
+                }
+            })
+            .catch(function(error) {
+                console.error('Error deleting comment:', error);
+                alert(error.message || '댓글 삭제에 실패했습니다.');
+            });
+    };
+
+    // 이벤트 리스너 등록
+    if (btnCreateComment) {
+        btnCreateComment.addEventListener('click', createComment);
+    }
+
+    // 초기 댓글 로드
+    loadComments();
 });

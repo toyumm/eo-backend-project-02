@@ -62,15 +62,11 @@ public class SecurityConfiguration {
                         .requestMatchers("/mypage/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/board/**").permitAll()
                         .requestMatchers("/board/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/error/**").permitAll()
                         .anyRequest().authenticated()
                 );
 
-        // CSRF 비활성화 (테스트용)
-        httpSecurity
-                .csrf(csrf -> csrf.disable());
-
-        // AccessDeniedException 예외를 처리할 핸들러 등록
         httpSecurity
                 .exceptionHandling(handler -> handler
                         .accessDeniedHandler(accessDeniedHandler())
