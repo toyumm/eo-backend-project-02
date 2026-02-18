@@ -34,7 +34,7 @@ public class SecurityConfiguration {
                 .requestMatchers("/css/**")
                 .requestMatchers("/images/**")
                 .requestMatchers("/js/**");
-                //.requestMatchers("/check-username", "/check-nickname");
+        //.requestMatchers("/check-username", "/check-nickname");
     }
 
     /**
@@ -62,6 +62,16 @@ public class SecurityConfiguration {
                         .requestMatchers("/mypage/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/board/**").permitAll()
                         .requestMatchers("/board/**").hasAnyRole("USER", "ADMIN")
+
+                        // 댓글 조회 API (GET) - 로그인 불필요 (누구나 댓글을 볼 수 있음)
+                        .requestMatchers(HttpMethod.GET, "/api/posts/*/comments").permitAll()
+
+                        // 댓글 작성/수정/삭제 API (POST, PUT, DELETE) - 로그인 필수
+                        .requestMatchers(HttpMethod.POST, "/api/posts/*/comments").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/posts/*/comments/*").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/posts/*/comments/*").hasAnyRole("USER", "ADMIN")
+
+                        // 그 외 모든 API - 로그인 필수
                         .requestMatchers("/api/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/error/**").permitAll()
                         .anyRequest().authenticated()
