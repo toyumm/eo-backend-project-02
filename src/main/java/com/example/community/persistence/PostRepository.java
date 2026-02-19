@@ -31,15 +31,25 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
     @Query("SELECT p FROM PostEntity p JOIN UserEntity u ON p.userId = u.id WHERE u.nickname LIKE %:keyword%")
     Page<PostEntity> searchByWriter(@Param("keyword") String keyword, Pageable pageable);
 
+    // 댓글 내용으로 검색
+    @Query("SELECT DISTINCT p FROM PostEntity p JOIN p.commentEntityList c WHERE c.content LIKE %:keyword%")
+    Page<PostEntity> searchByCommentContent(@Param("keyword") String keyword, Pageable pageable);
+
+    // 댓글 작성자로 검색
+    @Query("SELECT DISTINCT p FROM PostEntity p JOIN p.commentEntityList c JOIN UserEntity u ON c.userId = u.id WHERE u.nickname LIKE %:keyword%")
+    Page<PostEntity> searchByCommentWriter(@Param("keyword") String keyword, Pageable pageable);
+
     // 조회수 TOP 10 (인기 게시글)
     @Query("SELECT p FROM PostEntity p ORDER BY p.viewCount DESC")
     Page<PostEntity> findTopByViewCount(Pageable pageable);
 
-    @Query("SELECT p FROM PostEntity p WHERE p.boardId = :boardId AND (" +
+    @Query("SELECT DISTINCT p FROM PostEntity p LEFT JOIN p.commentEntityList c LEFT JOIN UserEntity u2 ON c.userId = u2.id WHERE p.boardId = :boardId AND (" +
             "(:searchType = 'title' AND p.title LIKE %:keyword%) OR " +
             "(:searchType = 'content' AND p.content LIKE %:keyword%) OR " +
             "(:searchType = 'writer' AND p.userId IN (SELECT u.id FROM UserEntity u WHERE u.nickname LIKE %:keyword%)) OR " +
             "(:searchType = 'titleContent' AND (p.title LIKE %:keyword% OR p.content LIKE %:keyword%)) OR " +
+            "(:searchType = 'commentContent' AND c.content LIKE %:keyword%) OR " +
+            "(:searchType = 'commentWriter' AND u2.nickname LIKE %:keyword%) OR " +
             "(:searchType = '' AND (p.title LIKE %:keyword% OR p.content LIKE %:keyword%)))")
     Page<PostEntity> findByBoardIdAndSearchType(
             @Param("boardId") Long boardId,
