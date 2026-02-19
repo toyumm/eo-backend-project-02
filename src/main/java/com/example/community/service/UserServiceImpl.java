@@ -196,4 +196,29 @@ public class UserServiceImpl implements UserService {
         log.info("비밀번호 변경 완료: userId={}", userId);
     }
 
+
+    /**
+     * 비밀번호 재설정 (이메일 인증 후)
+     */
+    @Transactional
+    @Override
+    public void resetPassword(String email, String newPassword) {
+        log.info("비밀번호 재설정 시작: email={}", email);
+
+        // 이메일로 사용자 찾기
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("해당 이메일로 등록된 사용자가 없습니다."));
+
+        // 비밀번호 유효성 검사
+        if (newPassword == null || newPassword.length() < 8 || newPassword.length() > 20) {
+            throw new IllegalArgumentException("비밀번호는 8~20자로 입력해주세요.");
+        }
+
+        // 비밀번호 암호화 및 저장
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        user.updatePassword(encodedPassword);
+
+        log.info("비밀번호 재설정 완료: email={}", email);
+    }
+
 }

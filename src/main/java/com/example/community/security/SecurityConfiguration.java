@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
+
 /**
  * Spring Security 설정
  */
@@ -76,6 +77,10 @@ public class SecurityConfiguration {
                         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
                         .requestMatchers("/", "/login", "/signup", "/check-username", "/check-nickname","/findpassword").permitAll()
                         .requestMatchers("/send-verification-email", "/verify-email-code").permitAll()
+
+                        .requestMatchers("/api/email/**").permitAll()
+                        .requestMatchers("/api/user/reset-password").permitAll()
+
                         .requestMatchers("/css/**", "/images/**", "/js/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/mypage/**").hasAnyRole("USER", "ADMIN")
