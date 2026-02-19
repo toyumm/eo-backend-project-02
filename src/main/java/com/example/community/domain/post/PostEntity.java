@@ -111,4 +111,14 @@ public class PostEntity {
         return this;
     }
 
+    public PostEntity increaseCommentsCount() {
+        this.commentsCount = (this.commentsCount == null ? 1 : this.commentsCount + 1);
+        return this;
+    }
+
+    public PostEntity decreaseCommentsCount() {
+        this.commentsCount = (this.commentsCount == null || this.commentsCount <= 0 ? 0 : this.commentsCount - 1);
+        return this;
+    }
+
 }

@@ -167,6 +167,12 @@ public class PostServiceImpl implements PostService {
             case "titleContent":
                 resultPage = postRepository.searchByTitleOrContent(keyword, pageable);
                 break;
+            case "commentContent":
+                resultPage = postRepository.searchByCommentContent(keyword, pageable);
+                break;
+            case "commentWriter":
+                resultPage = postRepository.searchByCommentWriter(keyword, pageable);
+                break;
             default:
                 log.warn("SEARCH: invalid searchType={}, using titleContent", searchType);
                 resultPage = postRepository.searchByTitleOrContent(keyword, pageable);

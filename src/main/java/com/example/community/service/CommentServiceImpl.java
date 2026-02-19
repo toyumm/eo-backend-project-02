@@ -74,6 +74,10 @@ public class CommentServiceImpl implements CommentService {
                                     .content(commentDto.getContent())
                                     .build()
                     );
+
+                    postEntity.increaseCommentsCount();
+                    postRepository.save(postEntity);
+
                     return convertToDto(saved);
                 });
     }
@@ -106,6 +110,12 @@ public class CommentServiceImpl implements CommentService {
         return commentRepository.findById(id)
                 .filter(comment -> isOwner(comment, userId) || isAdmin(userId))
                 .map(comment -> {
+                    // 댓글 수 감소 추가
+                    postRepository.findById(comment.getPostEntity().getId())
+                            .ifPresent(post -> {
+                                post.decreaseCommentsCount();
+                                postRepository.save(post);
+                            });
                     commentRepository.delete(comment);
                     return true;
                 })
