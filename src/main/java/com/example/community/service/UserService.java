@@ -50,4 +50,9 @@ public interface UserService {
      */
     void changePassword(Long userId, String currentPassword, String newPassword, String newPasswordConfirm);
 
+    /*
+     * 비밀번호 재설정 (이메일 인증 후)
+     */
+    void resetPassword(String email, String newPassword);
+
 }

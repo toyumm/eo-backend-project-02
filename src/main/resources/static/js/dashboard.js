@@ -55,7 +55,6 @@ function setupMenuListeners() {
 
 function setupButtonListeners() {
     document.getElementById('main-page-btn').addEventListener('click', goToMain);
-    document.getElementById('logout-btn').addEventListener('click', logout);
 }
 
 //네비게이션
@@ -63,11 +62,7 @@ function goToMain() {
     window.location.href = '/';
 }
 
-function logout() {
-    if (confirm('로그아웃 하시겠습니까?')) {
-        window.location.href = '/logout';
-    }
-}
+
 
 function switchSection(section) {
     currentSection = section;
