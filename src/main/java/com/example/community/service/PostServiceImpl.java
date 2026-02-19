@@ -7,12 +7,17 @@ import com.example.community.domain.user.UserRole;
 import com.example.community.persistence.PostRepository;
 import com.example.community.persistence.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,12 +27,22 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
 
+    private String getNickname(Long userId) {
+        return userRepository.findById(userId)
+                .map(UserEntity::getNickname)
+                .orElse("unknown");
+    }
+
     private boolean isAdmin(Long userId) {
         return userRepository.findById(userId)
                 .map(user -> user.getRole() == UserRole.ADMIN)
                 .orElse(false);
     }
 
+    /**
+     * 게시글 생성
+     * 게시글 ID 반환
+     */
     @Override
     public Long create(Long boardId, PostDto postDto, Long userId) {
         log.info("CREATE: boardId={}, postDto={}, userId={}", boardId, postDto, userId);
@@ -51,6 +66,10 @@ public class PostServiceImpl implements PostService {
         return savedEntity.getId();
     }
 
+    /**
+     * 게시글 단건 조회
+     * 작성자 닉네임 포함 DTO 반환
+     */
     @Override
     @Transactional
     public PostDto read(Long id) {
@@ -78,6 +97,11 @@ public class PostServiceImpl implements PostService {
         return PostDto.from(postEntity, nickname);
     }
 
+    /**
+     * 게시글 수정
+     * 작성자 본인만 수정가능
+     * 권한 불일치 시 false 반환
+     */
     @Override
     @Transactional
     public boolean update(PostDto postDto, Long userId) {
@@ -102,6 +126,13 @@ public class PostServiceImpl implements PostService {
                 .orElse(false);
     }
 
+
+    /**
+     *게시글 삭제
+     *
+     * 작성자 또는 관리자만 삭제 가능
+     * 권한이 없으면 삭제 거부
+     */
     @Override
     @Transactional
     public boolean delete(Long id, Long userId) {
@@ -124,6 +155,10 @@ public class PostServiceImpl implements PostService {
         }).orElse(false);
     }
 
+    /**
+     * 특정 게시판의 게시글 목록 조회(페이징)
+     * 게시판 ID 기준 조회
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<PostDto> getList(Long boardId, Pageable pageable) {
@@ -133,6 +168,10 @@ public class PostServiceImpl implements PostService {
                 .map(this::convertToDto);
     }
 
+    /**
+     *전체 게시글 목록 조회
+     * 관리자 화면 또는 메인 통합 목록에서 사용
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<PostDto> getAllPosts(Pageable pageable) {
@@ -142,6 +181,11 @@ public class PostServiceImpl implements PostService {
                 .map(this::convertToDto);
     }
 
+    /**
+     * 게시글 검색
+     * 검색 타입에 따라 분기 처리
+     * 키워드가 비어있으면 전체 목록 반환
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<PostDto> searchPosts(String searchType, String keyword, Pageable pageable) {
@@ -181,6 +225,10 @@ public class PostServiceImpl implements PostService {
         return resultPage.map(this::convertToDto);
     }
 
+    /**
+     * 인기 게시글 조회
+     * 조회수 기준 상위 게시글 반환
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<PostDto> getPopularPosts(Pageable pageable) {
@@ -203,6 +251,10 @@ public class PostServiceImpl implements PostService {
         return PostDto.from(postEntity, nickname);
     }
 
+    /**
+     * 특정 게시판 내에서 게시글 검색
+     * 게시판 범위를 제한한 검색 기능
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<PostDto> searchPostsInBoard(Long boardId, String searchType, String keyword, Pageable pageable) {
@@ -213,6 +265,12 @@ public class PostServiceImpl implements PostService {
         return entities.map(this::convertToDto);
     }
 
+    /**
+     * 로그인 사용자가 작성한 게시글 전체 목록 조회
+     * @param userId 작성자(로그인 사용자) ID
+     * @param pageable 페이징 정보
+     * @return 게시글 페이지
+     */
     @Override
     public Page<PostDto> getMyPosts(Long userId, Pageable pageable) {
         log.info("내 게시글 조회: userId={}, page={}, size={}",
@@ -224,5 +282,22 @@ public class PostServiceImpl implements PostService {
 
         return postRepository.findByUserId(userId, pageable)
                 .map(post -> PostDto.from(post, nickname));
+    }
+
+    /**
+     * 마이페이지 대시보드용 최신 게시글 10개 조회
+     * @param userId 작성자(로그인 사용자) ID
+     * @return 최신 게시글 10개 목록
+     */
+    @Override
+    @Transactional(readOnly = true)
+        public List<PostDto> findTop10ByUserId(Long userId) {
+
+            Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        return postRepository.findByUserId(userId, pageable)
+                .stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
 }

@@ -1,3 +1,7 @@
+/**
+ * 쪽지 쓰기 기능
+ * - CSRF 토큰은 message-com.js에서 처리
+ */
 document.addEventListener('DOMContentLoaded', () => {
     const writeForm = document.getElementById('writeForm');
 
@@ -5,10 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     writeForm.addEventListener('submit', function(e) {
         e.preventDefault();
-
-        // CSRF 토큰 가져오기
-        const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
 
         const messageData = {
             receiverNickname: document.getElementById('receiverNickname').value.trim(),
@@ -30,14 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const headers = {
-            'Content-Type': 'application/json'
-        };
-
-        // CSRF 토큰이 있으면 헤더에 추가
-        if (csrfToken && csrfHeader) {
-            headers[csrfHeader] = csrfToken;
-        }
+        const headers = MessageCommon.getCsrfHeaders();
 
         fetch('/messages/api/write', {
             method: 'POST',

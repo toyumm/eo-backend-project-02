@@ -97,3 +97,76 @@
     font-size:13px;
     display:none;
 }
+
+/* 로그인 후 사용자 정보 박스 */
+#auth-box2 {
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #e0e0e0;
+}
+
+#auth-box2 .user-info {
+    text-align: center;
+}
+
+#auth-box2 .user-info p {
+    font-size: 16px;
+    margin-bottom: 15px;
+    font-weight: bold;
+    color: #333;
+}
+
+#auth-box2 .user-info p span {
+    color: #667eea;
+}
+
+#auth-box2 .profile-links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#auth-box2 .profile-links a {
+    padding: 10px;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #333;
+    font-size: 14px;
+    text-align: center;
+    display: block;
+    width: 100%;
+    cursor: pointer;
+}
+
+#auth-box2 .profile-links a:hover {
+    background-color: #f0f0f0;
+}
+
+/* 로그아웃 폼 및 버튼 */
+#auth-box2 .profile-links form {
+    display: block;
+    margin: 0;
+    padding: 0;
+}
+
+#auth-box2 .profile-links button {
+    width: 100%;
+    padding: 10px;
+    background-color: #dc3545;
+    color: white;
+    border: 1px solid #dc3545;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    display: block;
+}
+
+#auth-box2 .profile-links button:hover {
+    background-color: #c82333;
+}

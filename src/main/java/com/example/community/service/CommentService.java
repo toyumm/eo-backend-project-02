@@ -25,11 +25,19 @@ public interface CommentService {
     Page<CommentDto> getAllComments(Pageable pageable);
 
     /**
+     * 마이페이지 최신 댓글 10개 조회
+     * @param userId 작성자(로그인 사용자) ID
+     * @return 최신 댓글 10개 목록
+     */
+    List<CommentDto> findTop10ByUserId(Long userId);
+
+    /**
      * 내가 작성한 댓글 목록 조회
      * @param userId 작성자(로그인 사용자) ID
      * @param pageable 페이징 정보
      * @return 댓글 달린 게시물
      */
     Page<CommentDto> getMyComments(Long userId, Pageable pageable);
+
 }
 

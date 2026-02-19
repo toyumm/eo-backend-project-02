@@ -195,10 +195,18 @@
             <div id="ranking-section">
                 <h3>인기 게시글</h3>
                 <ul class="ranking-list">
-                    <li class="ranking-item">
-                        <span class="ranking-number">1</span>
-                        <a href="#" title="인기 게시글 제목입니다">인기 게시글 제목입니다</a>
-                        <span class="ranking-views">1.2k</span>
+                    <li th:each="popular, stat : ${popularPosts}" class="ranking-item">
+                        <span class="ranking-number" th:text="${stat.count}">1</span>
+                        <a th:href="@{/board/{boardId}/post/read(boardId=${popular.boardId}, id=${popular.id})}"
+                           th:text="${popular.title}"
+                           th:title="${popular.title}">인기 게시글 제목</a>
+                        <span class="ranking-views"
+                              th:text="${popular.viewCount >= 1000 ? (#numbers.formatDecimal(popular.viewCount / 1000.0, 1, 1) + 'k') : popular.viewCount}">1.2k</span>
+                    </li>
+
+                    <!-- 인기 게시글이 없는 경우 -->
+                    <li th:if="${popularPosts == null || #lists.isEmpty(popularPosts)}" class="empty-ranking">
+                        <span>인기 게시글이 없습니다.</span>
                     </li>
                 </ul>
             </div>

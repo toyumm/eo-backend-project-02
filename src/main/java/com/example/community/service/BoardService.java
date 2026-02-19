@@ -24,4 +24,6 @@ public interface BoardService {
 
     // 공지 게시판 목록 조회
     List<BoardDto> getNoticeBoardList();
+
+    List<BoardDto> getByIds(List<Long> ids);
 }

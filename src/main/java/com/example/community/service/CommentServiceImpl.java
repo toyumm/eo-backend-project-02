@@ -2,13 +2,18 @@ package com.example.community.service;
 
 import com.example.community.domain.comment.CommentDto;
 import com.example.community.domain.comment.CommentEntity;
+import com.example.community.domain.post.PostDto;
+import com.example.community.domain.post.PostEntity;
+import com.example.community.domain.user.UserEntity;
 import com.example.community.persistence.CommentRepository;
 import com.example.community.persistence.PostRepository;
 import com.example.community.persistence.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -155,4 +160,15 @@ public class CommentServiceImpl implements CommentService {
                 .map(CommentDto::from);
     }
 
+    // 마이페이지 댓글 최신 10개
+    @Override
+    public List<CommentDto> findTop10ByUserId(Long userId) {
+
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        return commentRepository.findByUserId(userId, pageable)
+                .stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
 }

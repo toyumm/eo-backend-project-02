@@ -151,7 +151,6 @@ public class UserServiceImpl implements UserService {
     }
 
     // 마이페이지 닉네임 수정
-    @Transactional
     @Override
     public void updateNickname(Long userId, String nickname) {
         log.info("update nickname: userId={}, nickname={}", userId, nickname);
@@ -169,7 +168,6 @@ public class UserServiceImpl implements UserService {
     }
 
     // 마이페이지 비밀번호 변경
-    @Transactional
     @Override
     public void changePassword(Long userId,
                                String currentPassword,

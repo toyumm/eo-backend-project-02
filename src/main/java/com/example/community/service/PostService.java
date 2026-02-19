@@ -4,6 +4,8 @@ import com.example.community.domain.post.PostDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface PostService {
     /**
      * 게시글 작성
@@ -71,7 +73,12 @@ public interface PostService {
 
     Page<PostDto> searchPostsInBoard(Long boardId, String searchType, String keyword, Pageable pageable);
 
-
+    /**
+     * 마이페이지 최신 게시글 10개 조회
+     * @param userId 작성자(로그인 사용자) ID
+     * @return 최신 게시글 10개 목록
+     */
+    List<PostDto> findTop10ByUserId(Long userId);
 
     /**
      * 내가 작성한 게시글 목록 조회
@@ -80,4 +87,5 @@ public interface PostService {
      * @return 게시글 페이지
      */
     Page<PostDto> getMyPosts(Long userId, Pageable pageable);
+
 }

@@ -20,6 +20,8 @@ public class PostDto {
     private Long id;
     private Long userId;
     private Long boardId;
+
+    private String boardTitle;
     private String title;
     private String content;
     // nickname

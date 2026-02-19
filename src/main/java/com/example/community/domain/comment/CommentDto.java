@@ -18,6 +18,8 @@ public class CommentDto {
     private Long userId;
     private Long postId;
 
+    private String postTitle;
+
     @NotBlank(message = "내용을 입력해주세요.")
     @Size(min = 1, max = 200, message = "내용은 1자 이상 200자 이하로 작성해 주셔야 합니다.")
     private String content;
@@ -40,6 +42,7 @@ public class CommentDto {
                 .content(commentEntity.getContent())
                 .createdAt(commentEntity.getCreatedAt())
                 .updatedAt(commentEntity.getUpdatedAt())
+                .postTitle(commentEntity.getPostEntity().getTitle())
                 .build();
     }
 

@@ -1,46 +1,46 @@
-// post-read.js - 댓글 기능 (완전한 버전)
+// post-read.js - 댓글 기능
 // 댓글 작성/수정/삭제 및 실시간 댓글 수 업데이트
 
 // 페이지 로드 시 실행
 document.addEventListener('DOMContentLoaded', function() {
 
     // URL에서 postId 추출
-    var urlParams = new URLSearchParams(window.location.search);
-    var postId = urlParams.get('id');
+    const urlParams = new URLSearchParams(window.location.search);
+    const postId = urlParams.get('id');
 
     if (!postId) {
         console.error('postId를 찾을 수 없습니다.');
         return;
     }
 
-    var COMMENT_API = '/api/posts/' + postId + '/comments';
+    const COMMENT_API = '/api/posts/' + postId + '/comments';
 
     // 사용자 정보 가져오기 (data 속성에서)
-    var postBox = document.querySelector('.post-box');
-    var CURRENT_USER_ID = postBox ? parseInt(postBox.getAttribute('data-user-id')) : null;
-    var IS_ADMIN = postBox ? postBox.getAttribute('data-is-admin') === 'true' : false;
+    const postBox = document.querySelector('.post-box');
+    const CURRENT_USER_ID = postBox ? parseInt(postBox.getAttribute('data-user-id')) : null;
+    const IS_ADMIN = postBox ? postBox.getAttribute('data-is-admin') === 'true' : false;
 
     console.log('Current User ID:', CURRENT_USER_ID);
     console.log('Is Admin:', IS_ADMIN);
 
     // DOM 요소
-    var commentList = document.getElementById('commentList');
-    var commentCount = document.getElementById('commentCount');
-    var topCommentCount = document.getElementById('topCommentCount');
-    var newComment = document.getElementById('newComment');
-    var btnCreateComment = document.getElementById('btnCreateComment');
-    var commentError = document.getElementById('commentError');
+    const commentList = document.getElementById('commentList');
+    const commentCount = document.getElementById('commentCount');
+    const topCommentCount = document.getElementById('topCommentCount');
+    const newComment = document.getElementById('newComment');
+    const btnCreateComment = document.getElementById('btnCreateComment');
+    const commentError = document.getElementById('commentError');
 
     // CSRF 토큰 가져오기
     function getCsrfToken() {
-        var tokenMeta = document.querySelector('meta[name="_csrf"]');
-        var headerMeta = document.querySelector('meta[name="_csrf_header"]');
+        const tokenMeta = document.querySelector('meta[name="_csrf"]');
+        const headerMeta = document.querySelector('meta[name="_csrf_header"]');
 
         console.log('CSRF Meta:', tokenMeta, headerMeta);
 
         if (tokenMeta && headerMeta) {
-            var token = tokenMeta.getAttribute('content');
-            var header = headerMeta.getAttribute('content');
+            const token = tokenMeta.getAttribute('content');
+            const header = headerMeta.getAttribute('content');
             console.log('CSRF Token:', token);
             console.log('CSRF Header:', header);
             return {
@@ -54,11 +54,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Fetch 헤더에 CSRF 추가 (CSRF 없으면 생략)
     function getFetchHeaders() {
-        var headers = {
+        const headers = {
             'Content-Type': 'application/json'
         };
 
-        var csrf = getCsrfToken();
+        const csrf = getCsrfToken();
         if (csrf && csrf.token && csrf.header) {
             headers[csrf.header] = csrf.token;
             console.log('CSRF 헤더 추가:', csrf.header, '=', csrf.token);
@@ -72,18 +72,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // 날짜 포맷팅
     function formatDate(dateString) {
         if (!dateString) return '-';
-        var date = new Date(dateString);
-        var year = date.getFullYear();
-        var month = String(date.getMonth() + 1).padStart(2, '0');
-        var day = String(date.getDate()).padStart(2, '0');
-        var hours = String(date.getHours()).padStart(2, '0');
-        var minutes = String(date.getMinutes()).padStart(2, '0');
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
         return year + '.' + month + '.' + day + ' ' + hours + ':' + minutes;
     }
 
     // HTML 이스케이프
     function escapeHtml(text) {
-        var div = document.createElement('div');
+        const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
@@ -103,9 +103,9 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        var html = '';
+        let html = '';
         comments.forEach(function(comment) {
-            var isOwner = (CURRENT_USER_ID && comment.userId === CURRENT_USER_ID);
+            const isOwner = (CURRENT_USER_ID && comment.userId === CURRENT_USER_ID);
 
             html += '<div class="comment-item" data-id="' + comment.id + '">';
             html += '  <div class="comment-body">';
@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 댓글 등록 (성공 후 loadComments() 호출)
     function createComment() {
-        var content = newComment.value.trim();
+        const content = newComment.value.trim();
 
         console.log('=== 댓글 작성 시작 ===');
         console.log('postId:', postId);
@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        var requestBody = { content: content };
+        const requestBody = { content: content };
         console.log('Request Body:', JSON.stringify(requestBody));
         console.log('Headers:', getFetchHeaders());
 
@@ -221,10 +221,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 댓글 수정 모드 열기
     window.editComment = function(button) {
-        var commentItem = button.closest('.comment-item');
-        var contentDiv = commentItem.querySelector('[data-content]');
-        var editBox = commentItem.querySelector('.comment-editbox');
-        var textarea = editBox.querySelector('textarea');
+        const commentItem = button.closest('.comment-item');
+        const contentDiv = commentItem.querySelector('[data-content]');
+        const editBox = commentItem.querySelector('.comment-editbox');
+        const textarea = editBox.querySelector('textarea');
 
         textarea.value = contentDiv.textContent.trim();
         contentDiv.style.display = 'none';
@@ -233,9 +233,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 댓글 수정 취소
     window.cancelEdit = function(button) {
-        var commentItem = button.closest('.comment-item');
-        var contentDiv = commentItem.querySelector('[data-content]');
-        var editBox = commentItem.querySelector('.comment-editbox');
+        const commentItem = button.closest('.comment-item');
+        const contentDiv = commentItem.querySelector('[data-content]');
+        const editBox = commentItem.querySelector('.comment-editbox');
 
         editBox.style.display = 'none';
         contentDiv.style.display = 'block';
@@ -243,9 +243,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 댓글 수정 저장 (성공 후 loadComments() 호출)
     window.saveEdit = function(button, commentId) {
-        var commentItem = button.closest('.comment-item');
-        var textarea = commentItem.querySelector('.comment-editbox textarea');
-        var content = textarea.value.trim();
+        const commentItem = button.closest('.comment-item');
+        const textarea = commentItem.querySelector('.comment-editbox textarea');
+        const content = textarea.value.trim();
 
         if (content.length < 1 || content.length > 200) {
             alert('댓글은 1~200자여야 합니다.');

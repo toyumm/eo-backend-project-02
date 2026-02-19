@@ -4,46 +4,208 @@
 <head>
     <meta charset="UTF-8">
     <title>마이페이지</title>
+    <link rel="stylesheet" href="/css/list.css">
+    <link rel="stylesheet" th:href="@{/css/mypage.css}">
+<!--    <script th:src="@{/js/mypage.js}"></script>-->
 </head>
 <body>
 
-<h1>마이페이지</h1>
+<div id="mypage-wrap" sec:authorize="isAuthenticated()">
 
-<div sec:authorize="isAuthenticated()">
-    <p><span sec:authentication="name"></span>님 환영합니다</p>
+    <header>
+        <h1>마이페이지</h1>
+        <p>
+            <span class="nickname" sec:authentication="principal.nickname"></span>님 환영합니다
+        </p>
+    </header>
 
-    <h2>내 정보</h2>
-    <p>아이디: <span th:text="${user.username}"></span></p>
-    <p>이메일: <span th:text="${user.email}"></span></p>
-    <p>닉네임: <span th:text="${user.nickname}"></span></p>
-    <p>가입일: <span th:text="${#temporals.format(user.createdAt, 'yyyy-MM-dd')}"></span></p>
+    <nav>
+        <button type="button" class="tab-btn is-active" data-target="tab-profile">내 정보</button>
+        <button type="button" class="tab-btn" data-target="tab-password">비밀번호 변경</button>
+        <button type="button" class="tab-btn" data-target="tab-posts">내 게시글 조회</button>
+        <button type="button" class="tab-btn" data-target="tab-comments">내 댓글 조회</button>
+        <button type="button" class="tab-btn danger" data-target="tab-withdraw">회원 탈퇴</button>
+    </nav>
 
-    <form th:action="@{/mypage/nickname}" method="post">
-        <input type="text" name="nickname" placeholder="새 닉네임" required>
-        <button type="submit">닉네임 변경</button>
-    </form>
+    <main>
+        <!-- 메시지 -->
+        <div class="alert success" th:if="${message}" th:text="${message}"></div>
+        <div class="alert error" th:if="${error}" th:text="${error}"></div>
 
-    <h2>비밀번호 변경</h2>
+        <!-- 내 정보 -->
+        <section id="tab-profile" class="tab-panel is-active">
+            <h2 class="section-title">내 정보</h2>
 
-    <form th:action="@{/mypage/password}" method="post">
-        <input type="password" name="currentPassword" placeholder="현재 비밀번호" required>
-        <input type="password" name="newPassword" placeholder="새 비밀번호" required>
-        <input type="password" name="newPasswordConfirm" placeholder="새 비밀번호 확인" required>
-        <button type="submit">비밀번호 변경</button>
-    </form>
+            <div class="info-card">
+                <div class="info-row">
+                    <div class="label">아이디</div>
+                    <div class="value" th:text="${user.username}"></div>
+                </div>
 
-    <p th:if="${message}" th:text="${message}"></p>
-    <p th:if="${error}" th:text="${error}"></p>
+                <div class="info-row">
+                    <div class="label">이메일</div>
+                    <div class="value" th:text="${user.email}"></div>
+                </div>
+
+                <!-- 닉네임 영역 -->
+                <div class="info-row nickname-row">
+                    <div class="label">닉네임</div>
+
+                    <div class="value" id="nicknameDisplay">
+                        <span id="nicknameText" th:text="${user.nickname}"></span>
+                        <button type="button" class="btn small" id="editNicknameBtn">수정</button>
+                    </div>
+
+                    <!-- 닉네임 수정 -->
+                    <div class="nickname-edit hidden" id="nicknameEditBox">
+                        <input type="text"
+                               class="input small"
+                               id="nicknameInput"
+                               th:placeholder="${user.nickname}">
+                        <button type="button" class="btn small outline" id="checkNicknameBtn">중복확인</button>
+                        <button type="button" class="btn small" id="saveNicknameBtn">저장</button>
+                        <button type="button" class="btn small outline" id="cancelNicknameBtn">취소</button>
+
+                        <p class="nickname-message"></p>
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <div class="label">가입일</div>
+                    <div class="value" th:text="${#temporals.format(user.createdAt, 'yyyy-MM-dd')}"></div>
+                </div>
+            </div>
+        </section> <!--/#tab-profile -->
+
+        <section id="tab-password" class="tab-panel">
+            <h2 class="section-title">비밀번호 변경</h2>
+
+            <form id="form" th:action="@{/mypage/password}" method="post">
+
+                <!-- 비밀번호 체크 -->
+                <div id="password-check">
+                    <label class="field">
+                        <span>현재 비밀번호</span>
+                        <input class="input" type="password" name="currentPassword" required>
+                    </label>
+
+                    <button type="button" class="btn" id="verifyPasswordBtn">확인</button>
+                </div>
+
+                <!-- 비밀번호 변경 -->
+                <div id="password-step2" class="hidden">
+                    <label class="field">
+                        <span>새 비밀번호</span>
+                        <input class="input" type="password" name="newPassword" required>
+                    </label>
+
+                    <label class="field">
+                        <span>새 비밀번호 확인</span>
+                        <input class="input" type="password" name="newPasswordConfirm" required>
+                    </label>
+
+                    <button class="btn" type="submit">비밀번호 변경</button>
+                </div>
+
+            </form>
+        </section><!--/#tab-password -->
+
+        <!-- 내 게시글 -->
+        <section id="tab-posts" class="tab-panel">
+            <h2 class="section-title">
+                내 게시글
+                <span class="count-badge" th:text="'(' + ${myPostsCount} + ')'"></span>
+            </h2>
+
+            <div class="list-preview">
+
+                <div class="empty-state" th:if="${#lists.isEmpty(recentPosts)}">
+                    작성한 게시글이 없습니다.
+                </div>
+
+                <div th:each="post : ${recentPosts}" class="list-item">
+                    <a th:href="@{/board/{boardId}/post/read(boardId=${post.boardId}, id=${post.id})}"
+                       th:text="${post.title}">
+                    </a>
+                    <span class="date"
+                          th:text="${#temporals.format(post.createdAt,'yyyy-MM-dd')}">
+                    </span>
+                </div>
+
+                <div class="more-btn">
+                    <a class="btn outline" th:href="@{/mypage/posts}">
+                        전체 보기
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 내 댓글 -->
+        <section id="tab-comments" class="tab-panel">
+            <h2 class="section-title">내 댓글
+            <span class="count-badge" th:text="'(' + ${myCommentsCount} + ')'"></span>
+            </h2>
+
+            <div class="list-preview">
+                <div class="empty-state" th:if="${#lists.isEmpty(recentComments)}">
+                    작성한 댓글이 없습니다.
+                </div>
+
+                <div th:each="comment : ${recentComments}" class="list-item">
+                    <a th:href="@{/board/{boardId}/post/read(boardId=${comment.boardId}, id=${comment.postId})}"
+                       th:text="${comment.content}">
+                    </a>
+                    <span class="date"
+                          th:text="${#temporals.format(comment.createdAt,'yyyy-MM-dd')}">
+                    </span>
+                </div>
+
+                <div class="more-btn">
+                    <a class="btn outline" th:href="@{/mypage/comments}">
+                        전체 보기
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 회원 탈퇴 -->
+        <section id="tab-withdraw" class="tab-panel">
+            <h2 class="section-title">회원 탈퇴</h2>
+
+            <div id="danger-card">
+                <p>주의</p>
+
+                <ul>
+                    <li>탈퇴 후 계정 복구가 불가능합니다.</li>
+                    <li>작성한 게시글/댓글 처리 정책은 서비스 정책에 따릅니다.</li>
+                </ul>
+
+                <div>
+                    <button type="button" class="btn danger" id="openWithdrawModal">회원 탈퇴 진행</button>
+                </div>
+            </div>
+        </section>
+    </main>
 </div>
 
-<h2>내 활동</h2>
-<a th:href="@{/mypage/posts}">내 게시글 보기</a>
-<a th:href="@{/mypage/comments}">내 댓글 보기</a>
+<!-- 탈퇴 확인 -->
+<div class="modal-backdrop" id="withdrawModal" aria-hidden="true">
+    <div id="modal">
+        <h3>정말로 탈퇴하시겠습니까?</h3>
 
-<form th:action="@{/mypage/removeAccount}" method="post"
-      onsubmit="return confirm('정말 탈퇴하시겠습니까?');">
-    <button type="submit">회원 탈퇴</button>
-</form>
+        <p class="modal-desc">
+            탈퇴하면 계정을 되돌릴 수 없습니다.<br>
+            정말 진행하시려면 아래 버튼을 눌러주세요.
+        </p>
+
+        <div class="modal-actions">
+            <button type="button" class="btn outline" id="closeWithdrawModal">취소</button>
+            <form th:action="@{/mypage/removeAccount}" method="post">
+                <button class="btn danger" type="submit">탈퇴하기</button>
+            </form>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

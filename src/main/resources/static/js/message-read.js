@@ -1,5 +1,6 @@
 /**
  * 쪽지 상세 조회 및 삭제 분기 로직
+ * - CSRF 토큰은 message-com.js에서 처리
  */
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -74,12 +75,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (confirm(confirmMsg)) {
                 const userType = currentMessageData.type.toLowerCase();
 
+                const headers = MessageCommon.getCsrfHeaders();
+
                 // 휴지통 페이지면 delete, 아니면 trash 호출
                 const apiUrl = isTrashContext
                     ? `/messages/api/delete?id=${messageId}&userType=${userType}`
                     : `/messages/api/trash?id=${messageId}&userType=${userType}`;
 
-                fetch(apiUrl, { method: 'POST' })
+                fetch(apiUrl, {
+                    method: 'POST',
+                    headers: headers,
+                    credentials: 'same-origin'
+                })
                     .then(res => {
                         if (res.ok) {
                             alert('삭제되었습니다.');

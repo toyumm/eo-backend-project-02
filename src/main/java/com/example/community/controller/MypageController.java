@@ -3,11 +3,11 @@ package com.example.community.controller;
 import com.example.community.domain.user.UserDto;
 import com.example.community.security.CustomUserDetails;
 import com.example.community.service.CommentService;
+import com.example.community.service.MypageService;
 import com.example.community.service.PostService;
 import com.example.community.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -30,6 +30,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class MypageController {
 
     private final UserService userService;
+    private final MypageService mypageService;
     private final PostService postService;
     private final CommentService commentService;
 
@@ -40,10 +41,11 @@ public class MypageController {
      */
     @GetMapping("")
     public String mypage(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
-
         log.info("마이페이지 접근 시도");
 
         if (userDetails == null) {
+            // 보안 설정상 비로그인 사용자는 여기까지 못 오는게 정상인데,
+            // 혹시 모를 상황 대비로 메시지 표시
             model.addAttribute("error", "로그인이 필요한 서비스입니다");
             return "mypage/mypage";
         }
@@ -55,11 +57,29 @@ public class MypageController {
                 .orElseThrow(() -> new IllegalArgumentException("사용자 정보를 찾을 수 없습니다."));
 
         model.addAttribute("user", user);
+
+        Long userId = user.getId();
+
+        // 내가 작성한 게시글 최신 10개
+        model.addAttribute("recentPosts", postService.findTop10ByUserId(userId));
+
+        // 내가 작성한 댓글 최신 10개
+        model.addAttribute("recentComments", commentService.findTop10ByUserId(userId));
+
+        // 내가 작성한 게시글 개수 표시
+        model.addAttribute("myPostsCount",
+                postService.getMyPosts(userId, PageRequest.of(0, 1)).getTotalElements());
+
+        // 내가 작성한 댓글 개수 표시
+        model.addAttribute("myCommentsCount",
+                commentService.getMyComments(userId, PageRequest.of(0, 1)).getTotalElements());
+
         log.info("마이페이지 조회 성공: username={}", username);
 
         return "mypage/mypage";
     }
-    /*
+
+    /**
      * 닉네임 변경
      * - 로그인한 사용자의 닉네임 수정
      * - 닉네임 중복 시 예외 발생
@@ -68,6 +88,12 @@ public class MypageController {
     public String updateNickname(@AuthenticationPrincipal CustomUserDetails userDetails,
                                  @RequestParam String nickname,
                                  RedirectAttributes redirectAttributes) {
+
+        // 방어 코드(보안상 보통 여기까지 안 옴)
+        if (userDetails == null) {
+            redirectAttributes.addFlashAttribute("error", "로그인이 필요합니다.");
+            return "redirect:/login";
+        }
 
         Long userId = userDetails.getUser().getId();
         log.info("닉네임 변경 요청: userId={}, newNickname={}", userId, nickname);
@@ -97,8 +123,13 @@ public class MypageController {
                                  @RequestParam String newPasswordConfirm,
                                  RedirectAttributes redirectAttributes) {
 
-        Long userId = userDetails.getUser().getId();
 
+        if (userDetails == null) {
+            redirectAttributes.addFlashAttribute("error", "로그인이 필요합니다.");
+            return "redirect:/login";
+        }
+
+        Long userId = userDetails.getUser().getId();
         log.info("비밀번호 변경 요청: userId={}", userId);
 
         try {
@@ -125,12 +156,20 @@ public class MypageController {
                           @RequestParam(defaultValue = "10") int size,
                           Model model) {
 
+        if (userDetails == null) {
+            return "redirect:/login";
+        }
+
+        // page 최소값 방어 (page=0, -1 같은 요청 방지)
+        if (page < 1) page = 1;
+        if (size < 1) size = 10;
+
         Long userId = userDetails.getUser().getId();
         log.info("내 게시글 목록 조회: userId={}, page={}, size={}", userId, page, size);
 
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        var postPage = postService.getMyPosts(userId, pageable);
+        var postPage = mypageService.getMyPosts(userId, pageable);
 
         model.addAttribute("postPage", postPage);
         model.addAttribute("page", page);
@@ -153,12 +192,19 @@ public class MypageController {
                              @RequestParam(defaultValue = "10") int size,
                              Model model) {
 
+        if (userDetails == null) {
+            return "redirect:/login";
+        }
+
+        if (page < 1) page = 1;
+        if (size < 1) size = 10;
+
         Long userId = userDetails.getUser().getId();
         log.info("내 댓글 목록 조회: userId={}, page={}, size={}", userId, page, size);
 
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        var commentPage = commentService.getMyComments(userId, pageable);
+        var commentPage = mypageService.getMyComments(userId, pageable);
 
         model.addAttribute("commentPage", commentPage);
         model.addAttribute("page", page);
@@ -169,6 +215,10 @@ public class MypageController {
         return "mypage/mypage-comments";
     }
 
+    /**
+     * 회원 탈퇴
+     * - 성공 시 사용자 삭제 + 로그아웃 + 홈으로 이동
+     */
     @PostMapping("/removeAccount")
     public String removeAccount(@AuthenticationPrincipal CustomUserDetails userDetails,
                                 RedirectAttributes redirectAttributes,
@@ -180,6 +230,7 @@ public class MypageController {
             redirectAttributes.addFlashAttribute("error", "로그인이 필요합니다.");
             return "redirect:/login";
         }
+
         Long userId = userDetails.getUser().getId();
         log.info("회원 탈퇴 요청(계정 삭제): userId={}", userId);
 
@@ -203,6 +254,5 @@ public class MypageController {
             redirectAttributes.addFlashAttribute("error", "회원 탈퇴 처리 중 오류가 발생했습니다.");
             return "redirect:/mypage";
         }
-
     }
 }

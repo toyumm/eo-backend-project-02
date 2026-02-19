@@ -110,10 +110,26 @@ public class PostController {
 
     @GetMapping("/write")
     public String write(@PathVariable Long boardId, Model model) {
+        log.info("writeForm boardId={}", boardId);
+
         model.addAttribute("boardId", boardId);
         model.addAttribute("action", "/board/" + boardId + "/post/write");
         model.addAttribute("title", "Write a new post");
         model.addAttribute("postDto", new PostDto());
+
+        // 게시판 목록 추가
+        List<BoardDto> allBoards = boardService.getList();
+        model.addAttribute("noticeBoardList", allBoards.stream()
+                .filter(b -> "NOTICE".equals(b.getCategory()))
+                .toList());
+        model.addAttribute("boardList", allBoards.stream()
+                .filter(b -> b.getCategory() == null || !"NOTICE".equals(b.getCategory()))
+                .toList());
+
+        // 인기 게시물 추가 (오른쪽 사이드바용)
+        Pageable popularPageable = PageRequest.of(0, 10);
+        Page<PostDto> popularPosts = postService.getPopularPosts(popularPageable);
+        model.addAttribute("popularPosts", popularPosts.getContent());
 
         return "post/write";
     }
@@ -130,7 +146,7 @@ public class PostController {
         model.addAttribute("criteria", criteria);
         model.addAttribute("postDto", postService.read(id));
 
-        // 🔧 현재 사용자 ID와 관리자 여부를 Model에 추가 (댓글 기능용)
+        // 현재 사용자 ID와 관리자 여부를 Model에 추가 (댓글 기능용)
         Long currentUserId = null;
         boolean isAdmin = false;
         if (userDetails != null) {
