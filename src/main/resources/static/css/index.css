@@ -235,6 +235,20 @@ body {
     padding: 10px;
 }
 
+/* 섹션 제목 (전체 게시글) */
+.section-title-container {
+    margin-top: 30px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #667eea;
+}
+
+.section-title {
+    font-size: 18px;
+    color: #333;
+    margin: 0;
+}
+
 /* 게시글 목록 테이블 */
 #post-table {
     width: 100%;

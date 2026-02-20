@@ -61,6 +61,23 @@ public class PostController {
             model.addAttribute("noticeList", List.of());
         }
 
+        // 게시판 제목 추가 (현재 게시판명 표시용)
+        BoardDto currentBoard = allBoards.stream()
+                .filter(b -> b.getId().equals(boardId))
+                .findFirst()
+                .orElse(null);
+
+        if (currentBoard != null) {
+            model.addAttribute("boardTitle", currentBoard.getTitle());
+            // 게시판 카테고리도 전달 (글쓰기 버튼 조건부 표시용)
+            model.addAttribute("boardCategory", currentBoard.getCategory());
+            log.info("게시판 제목 추가: boardId={}, title={}, category={}", boardId, currentBoard.getTitle(), currentBoard.getCategory());
+        } else {
+            log.warn("게시판을 찾을 수 없습니다. boardId={}", boardId);
+            model.addAttribute("boardTitle", "게시판");
+            model.addAttribute("boardCategory", null);
+        }
+
         Pageable pageable = PageRequest.of(criteria.getPage() - 1,
                 criteria.getSize(), Sort.by(Sort.Direction.DESC, "fixed")
                         .and(Sort.by(Sort.Direction.DESC, "id")));
@@ -109,8 +126,36 @@ public class PostController {
     }
 
     @GetMapping("/write")
-    public String write(@PathVariable Long boardId, Model model) {
+    public String write(@PathVariable Long boardId, Model model,
+                        @AuthenticationPrincipal CustomUserDetails userDetails,
+                        RedirectAttributes redirectAttributes) {
         log.info("writeForm boardId={}", boardId);
+
+        // 1) 현재 게시판 정보 조회
+        List<BoardDto> allBoards = boardService.getList();
+        BoardDto currentBoard = allBoards.stream()
+                .filter(b -> b.getId().equals(boardId))
+                .findFirst()
+                .orElse(null);
+
+        // 공지사항 게시판인 경우, 관리자만 접근 가능
+        if (currentBoard != null && "NOTICE".equals(currentBoard.getCategory())) {
+            // 비로그인 또는 일반 유저는 접근 불가
+            if (userDetails == null) {
+                log.warn("WRITE DENIED: 비로그인 사용자 (공지사항 게시판)");
+                redirectAttributes.addFlashAttribute("error", "로그인이 필요합니다.");
+                redirectAttributes.addAttribute("boardId", boardId);
+                return "redirect:/board/{boardId}/post/list";
+            }
+
+            boolean isAdmin = userDetails.getUser().getRole().toString().equals("ADMIN");
+            if (!isAdmin) {
+                log.warn("WRITE DENIED: 관리자가 아닌 사용자 (공지사항 게시판) - userId={}", userDetails.getId());
+                redirectAttributes.addFlashAttribute("error", "공지사항은 관리자만 작성할 수 있습니다.");
+                redirectAttributes.addAttribute("boardId", boardId);
+                return "redirect:/board/{boardId}/post/list";
+            }
+        }
 
         model.addAttribute("boardId", boardId);
         model.addAttribute("action", "/board/" + boardId + "/post/write");
@@ -118,7 +163,6 @@ public class PostController {
         model.addAttribute("postDto", new PostDto());
 
         // 게시판 목록 추가
-        List<BoardDto> allBoards = boardService.getList();
         model.addAttribute("noticeBoardList", allBoards.stream()
                 .filter(b -> "NOTICE".equals(b.getCategory()))
                 .toList());

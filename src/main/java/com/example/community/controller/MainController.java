@@ -7,6 +7,7 @@ import com.example.community.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 메인 페이지 컨트롤러
@@ -68,20 +70,22 @@ public class MainController {
         model.addAttribute("boardList", boardList);
 
         // 3) NOTICE 카테고리의 첫 번째 게시판 선택
+        // final 변수로 선언
+        final Long noticeBoardId;
         if (!noticeBoardList.isEmpty()) {
-            Long noticeBoardId = noticeBoardList.get(0).getId();
+            noticeBoardId = noticeBoardList.get(0).getId();
             Pageable noticePageable = PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "id"));
             var noticePage = postService.getList(noticeBoardId, noticePageable);
             model.addAttribute("noticeList", noticePage.getContent());
             log.info("공지사항 로드 성공: boardId={}, title={}, postCount={}",
                     noticeBoardId, noticeBoardList.get(0).getTitle(), noticePage.getContent().size());
         } else {
-            log.warn("NOTICE 카테고리의 게시판이 없습니다. 모든 게시판 목록: {}",
-                    allBoards.stream().map(b -> b.getTitle() + "(" + b.getCategory() + ")").toList());
+            log.warn("NOTICE 카테고리의 게시판이 없습니다");
             model.addAttribute("noticeList", List.of());
+            noticeBoardId = null;
         }
 
-        // 4) 게시글 목록 조회 (검색 또는 전체)
+        // 4) 게시글 목록 조회 (검색 또는 전체) - 공지사항 제외!
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "viewCount"));
         Page<PostDto> postPage;
 
@@ -90,8 +94,20 @@ public class MainController {
             postPage = postService.searchPosts(searchType, keyword, pageable);
             log.info("검색 결과: {} 건", postPage.getTotalElements());
         } else {
-            // 전체 목록
+            // 전체 목록 조회
             postPage = postService.getAllPosts(pageable);
+
+            // final noticeBoardId
+            if (noticeBoardId != null) {
+                List<PostDto> filteredContent = postPage.getContent().stream()
+                        .filter(post -> !post.getBoardId().equals(noticeBoardId))
+                        .collect(Collectors.toList());
+
+                postPage = new PageImpl<>(filteredContent, pageable, postPage.getTotalElements());
+                log.info("공지사항 게시판 제외: 원본 {} 건 → 필터링 후 {} 건",
+                        postPage.getContent().size() + filteredContent.size(),
+                        filteredContent.size());
+            }
         }
 
         model.addAttribute("postPage", postPage);

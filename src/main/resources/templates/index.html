@@ -127,6 +127,11 @@
                 </div>
             </section>
 
+            <!-- 전체 게시글 제목 추가 -->
+            <div class="section-title-container">
+                <h3 class="section-title">전체 게시글</h3>
+            </div>
+
             <!-- 게시글 목록 테이블 -->
             <table id="post-table">
                 <thead>
@@ -142,7 +147,8 @@
                 <tbody>
                 <!-- 게시글 목록 -->
                 <tr th:each="post, stat : ${postPage?.content}">
-                    <td th:text="${stat.count}">1</td>
+                    <!-- 번호 계산: (현재 페이지번호 * 페이지크기) + 현재 행 번호 -->
+                    <td th:text="${postPage.number * postPage.size + stat.count}">1</td>
                     <td class="title">
                         <a th:href="@{/board/{boardId}/post/read(boardId=${post.boardId}, id=${post.id})}"
                            th:text="${post.title}">게시글 제목</a>

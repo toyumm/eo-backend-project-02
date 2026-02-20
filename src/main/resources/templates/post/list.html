@@ -118,6 +118,11 @@
                 </div>
             </section>
 
+            <!-- 게시판 제목 표시 -->
+            <div class="section-title-container">
+                <h3 class="section-title" th:text="${boardTitle}">게시판명</h3>
+            </div>
+
             <table id="post-table">
                 <thead>
                 <tr>
@@ -132,6 +137,7 @@
                 <tr th:if="${postPage != null and not #lists.isEmpty(postPage.content)}"
                     th:each="post, stat : ${postPage.content}">
 
+                    <!-- 번호 계산: 역순 번호 (처음 작성한 게 1번) -->
                     <td th:text="${postPage.totalElements - (postPage.number * postPage.size) - stat.index}">1</td>
 
                     <td class="title">
@@ -163,7 +169,7 @@
                 <div id="pagination" th:if="${postPage != null && postPage.totalPages > 0}">
                     <!-- 이전 -->
                     <a th:if="${postPage.hasPrevious()}"
-                       th:href="@{/(page=${postPage.number}, searchType=${searchType}, keyword=${keyword})}"
+                       th:href="@{/board/{boardId}/post/list(boardId=${boardId}, page=${postPage.number}, searchType=${searchType}, keyword=${keyword})}"
                        title="이전 페이지">‹</a>
 
                     <!-- 페이지 번호 -->
@@ -172,16 +178,30 @@
                               class="current"
                               th:text="${i}">1</span>
                         <a th:unless="${i == postPage.number + 1}"
-                           th:href="@{/(page=${i}, searchType=${searchType}, keyword=${keyword})}"
+                           th:href="@{/board/{boardId}/post/list(boardId=${boardId}, page=${i}, searchType=${searchType}, keyword=${keyword})}"
                            th:text="${i}">1</a>
                     </th:block>
 
                     <!-- 다음 -->
                     <a th:if="${postPage.hasNext()}"
-                       th:href="@{/(page=${postPage.number + 2}, searchType=${searchType}, keyword=${keyword})}"
+                       th:href="@{/board/{boardId}/post/list(boardId=${boardId}, page=${postPage.number + 2}, searchType=${searchType}, keyword=${keyword})}"
                        title="다음 페이지">›</a>
                 </div>
-                <a th:href="@{/board/{id}/post/write(id=${boardId})}" class="btn-write">글쓰기</a>
+
+                <!-- 글쓰기 버튼: 공지사항 게시판인 경우 관리자만, 일반 게시판은 로그인 사용자만 -->
+                <th:block th:if="${boardCategory == 'NOTICE'}">
+                    <!-- 공지사항: 관리자만 -->
+                    <a th:href="@{/board/{id}/post/write(id=${boardId})}"
+                       class="btn-write"
+                       sec:authorize="hasRole('ADMIN')">글쓰기</a>
+                </th:block>
+
+                <th:block th:if="${boardCategory != 'NOTICE'}">
+                    <!-- 일반 게시판: 로그인 사용자만 -->
+                    <a th:href="@{/board/{id}/post/write(id=${boardId})}"
+                       class="btn-write"
+                       sec:authorize="isAuthenticated()">글쓰기</a>
+                </th:block>
             </div>
 
             <!-- 검색 영역 -->
